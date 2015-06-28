@@ -4,8 +4,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/codetainerapp/control/mlog"
-	"gopkg.in/alecthomas/kingpin.v1"
+	"github.com/codetainerapp/codetainer/mlog"
+	kingpin "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
@@ -44,27 +44,27 @@ var (
 )
 
 func initLogger() {
-	Log = mlog.New()
+	// Log = mlog.New()
 
-	Log.Prefix = Name
+	// Log.Prefix = Name
 
-	if *debug {
-		Log.SetLevel(mlog.DebugLevel)
-	} else {
-		Log.SetLevel(mlog.InfoLevel)
-	}
+	// if *debug {
+	// Log.SetLevel(mlog.DebugLevel)
+	// } else {
+	// Log.SetLevel(mlog.InfoLevel)
+	// }
 
-	if *dev {
-		DevMode = true
-		Log.SetLevel(mlog.DebugLevel)
-		Log.Info("DEBUG MODE ENABLED.")
-	} else {
-		DevMode = false
-	}
+	// if *dev {
+	// DevMode = true
+	// Log.SetLevel(mlog.DebugLevel)
+	// Log.Info("DEBUG MODE ENABLED.")
+	// } else {
+	// DevMode = false
+	// }
 
-	if *quiet {
-		Log.SetLevel(mlog.FatalLevel)
-	}
+	// if *quiet {
+	// Log.SetLevel(mlog.FatalLevel)
+	// }
 
 }
 

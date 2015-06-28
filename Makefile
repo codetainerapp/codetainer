@@ -37,8 +37,8 @@ build: bindata all
 
 updatedeps:
 	@$(ECHO) "$(OK_COLOR)==> Updating all dependencies$(NO_COLOR)"
-	@go get -d -v -u ./...
-	@echo $(DEPS) | xargs -n1 go get -d -u
+	@go get -d -v ./...
+	@echo $(DEPS) | xargs -n1 go get -d 
 	@godep update ...
 
 bindata:

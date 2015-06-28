@@ -73,6 +73,10 @@ func (f *AssetFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, errors.New("not a directory")
 }
 
+func (f *AssetFile) Size() int64 {
+	return f.FakeFile.Size()
+}
+
 func (f *AssetFile) Stat() (os.FileInfo, error) {
 	return f, nil
 }
@@ -132,12 +136,12 @@ func (fs *AssetFS) Open(name string) (http.File, error) {
 	if len(name) > 0 && name[0] == '/' {
 		name = name[1:]
 	}
+	if b, err := fs.Asset(name); err == nil {
+		return NewAssetFile(name, b), nil
+	}
 	if children, err := fs.AssetDir(name); err == nil {
 		return NewAssetDirectory(name, children, fs), nil
-	}
-	b, err := fs.Asset(name)
-	if err != nil {
+	} else {
 		return nil, err
 	}
-	return NewAssetFile(name, b), nil
 }

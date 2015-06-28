@@ -1,6 +1,6 @@
 {
-	"ImportPath": "github.com/codetainerapp/control",
-	"GoVersion": "go1.4.1",
+	"ImportPath": "github.com/codetainerapp/codetainer",
+	"GoVersion": "go1.4",
 	"Deps": [
 		{
 			"ImportPath": "github.com/alecthomas/units",
@@ -8,11 +8,11 @@
 		},
 		{
 			"ImportPath": "github.com/dustin/go-humanize",
-			"Rev": "145fabdb1ab757076a70a886d092a3af27f66f4c"
+			"Rev": "c128122e0b9b93799aef8181a537e5d8fd7081d6"
 		},
 		{
 			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
-			"Rev": "09ba9c6a7e9a5ee35586127fdf88bb20bb4990b7"
+			"Rev": "3dcc96556217539f50599357fb481ac0dc7439b9"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
@@ -20,20 +20,20 @@
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
-			"Rev": "8a875a034c69b940914d83ea03d3f1299b4d094b"
+			"Rev": "47e8f450ef38c857cdd922ec08862ca9d65a1c6d"
 		},
 		{
 			"ImportPath": "github.com/gorilla/securecookie",
-			"Rev": "5f171f42328bdd573211bb82bdee8f259c4c61ae"
+			"Rev": "68004d2ba3cbc80d3a9949ea431b5c9f22ee8707"
 		},
 		{
 			"ImportPath": "github.com/gorilla/sessions",
-			"Rev": "3e759b5c5532bec4f3934ea4c745e4ae5d69737a"
+			"Rev": "f61c3ec2cf65d69e7efedfd4d060fe128882c951"
 		},
 		{
 			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
-			"Comment": "v1.3.6",
-			"Rev": "55a69a226d28a43b913720f5d765706d49c8fa9e"
+			"Comment": "v1.3.7",
+			"Rev": "45f9714aa86a9624491adeaab1e9df1baf84dd38"
 		}
 	]
 }
