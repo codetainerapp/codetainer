@@ -1,0 +1,131 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/elazarl/go-bindata-assetfs"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
+)
+
+// handlerFunc adapts a function to an http.Handler.
+type handlerFunc func(ctx *Context) error
+
+var (
+	Store *sessions.CookieStore
+)
+
+func StartServer() {
+	Log.Infof("Initializing %s (%s)", Name, Version)
+
+	r := mux.NewRouter()
+	r.StrictSlash(true)
+
+	if DevMode {
+		// dev
+		Log.Debugf("Loading assets from disk.")
+		r.PathPrefix("/public/").Handler(http.FileServer(http.Dir("./web/")))
+	} else {
+		Log.Debugf("Loading assets from memory.")
+		r.PathPrefix("/public/").Handler(http.FileServer(
+			&assetfs.AssetFS{
+				Asset:    Asset,
+				AssetDir: AssetDir,
+				Prefix:   "web",
+			},
+		))
+	}
+
+	r.Handle("/", handlerFunc(RouteIndex))
+
+	http.Handle("/", r)
+
+	Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(32))
+	Store.Options = &sessions.Options{
+		//Domain:   "localhost", // Chrome doesn't work with localhost domain
+		Path:     "/",
+		MaxAge:   3600 * 8, // 8 hours
+		HttpOnly: true,
+		Secure:   *appSSL,
+	}
+
+	var port string = fmt.Sprintf(":%d", 3000)
+	var proto string = "http"
+
+	if *appSSL {
+		proto = "http"
+	}
+
+	Log.Infof("URL: %s://%s%s", proto, "127.0.0.1", port)
+
+	var err error
+
+	if *appSSL {
+		// err = http.ListenAndServeTLS(port, KittyConfig.file.PublicKeyPath,
+		// KittyConfig.file.PrivateKeyPath, context.ClearHandler(http.DefaultServeMux))
+	} else {
+		err = http.ListenAndServe(port, context.ClearHandler(http.DefaultServeMux))
+	}
+
+	if err != nil {
+		Log.Error(err.Error())
+	}
+
+}
+
+func (f handlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	source, err := GetRemoteAddr(r)
+
+	if err != nil {
+		source = "N/A"
+	}
+
+	Log.Debugf("HTTP: %s %s %s", source, r.Method, r.URL)
+
+	session, err := Store.Get(r, "codetainer")
+
+	if err != nil {
+		Log.Debug(err)
+	}
+
+	if session.IsNew {
+		// Log.Debug("Create New Session")
+
+		if err := session.Save(r, w); err != nil {
+			Log.Fatal(err)
+		}
+	}
+
+	// if !strings.Contains(r.URL.String(), "/api/") {
+	// if !KittyConfig.db.Setup {
+	// if r.URL.String() != "/install" && r.URL.String() != "/redis-test" {
+	// http.Redirect(w, r, "/install", 301)
+	// return
+	// }
+	// } else {
+	// if r.URL.String() != "/login" {
+	// if session.Values["current_user"] == nil {
+	// http.Redirect(w, r, "/login", 301)
+	// return
+	// }
+	// }
+	// }
+	// }
+
+	context := &Context{
+		W:       w,
+		R:       r,
+		Session: session,
+		// current user stuff
+	}
+
+	err = f(context)
+
+	if err != nil {
+		Log.Error(err)
+	}
+
+}
