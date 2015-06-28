@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -47,8 +48,8 @@ func (c *ContainerConnection) Start() {
 	c.write()
 }
 
-func newContainerClient() (*websocket.Conn, error) {
-	id := "9a58ba6db179"
+func newContainerClient(id string) (*websocket.Conn, error) {
+	//id := "9a58ba6db179"
 	u, err := url.Parse("http://localhost:4500/v1.5/containers/" + id + "/attach/ws?logs=1&stderr=1&stdout=1&stream=1&stdin=1")
 	if err != nil {
 		return nil, err
@@ -72,8 +73,11 @@ func newContainerClient() (*websocket.Conn, error) {
 }
 
 func RouteApiV1CodetainerAttach(ctx *Context) error {
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
 	connection := &ContainerConnection{}
-	if c, err := newContainerClient(); err != nil {
+
+	if c, err := newContainerClient(id); err != nil {
 		return err
 	} else {
 		connection.container = c
@@ -83,7 +87,6 @@ func RouteApiV1CodetainerAttach(ctx *Context) error {
 		return errors.New("No websocket connection for web client")
 	}
 	connection.web = ctx.WS
-	Log.Info("XXX We started")
 	connection.Start()
 
 	return nil

@@ -10,8 +10,9 @@ window.docker = (function(docker) {
         container + 
         "/attach/ws?logs=1&stderr=1&stdout=1&stream=1&stdin=1";
 
-      wsUri = "ws://127.0.0.1:3000/codetainer/1/attach";
-
+      wsUri = "ws://127.0.0.1:3000/codetainer/" + container + 
+        "/attach";
+      console.log(wsUri);
       var websocket = new WebSocket(wsUri);
       websocket.onopen = function(evt) { onOpen(evt) };
       websocket.onclose = function(evt) { onClose(evt) };
