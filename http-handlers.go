@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -37,6 +38,64 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 	}
 
 	return nil
+}
+
+//
+// List files in a codetainer
+//
+func RouteApiV1CodetainerListFiles(ctx *Context) error {
+
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+	if id == "" {
+		return errors.New("id is required")
+	}
+
+	path := ctx.R.FormValue("path")
+	if path == "" {
+		return errors.New("path is required")
+	}
+
+	endpoint := GlobalConfig.GetDockerEndpoint()
+	client, err := docker.NewClient(endpoint)
+	if err != nil {
+		return err
+	}
+
+	exec, err := client.CreateExec(docker.CreateExecOptions{
+		AttachStderr: true,
+		AttachStdin:  false,
+		AttachStdout: true,
+		Tty:          false,
+		Cmd:          []string{"ls", path},
+		Container:    id,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	var outputBytes []byte
+	outputWriter := bytes.NewBuffer(outputBytes)
+	var errorBytes []byte
+	errorWriter := bytes.NewBuffer(errorBytes)
+
+	// TODO fetch config for codetainer
+	err = client.StartExec(exec.ID, docker.StartExecOptions{
+		OutputStream: outputWriter,
+		ErrorStream:  errorWriter,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// TODO: parse into string
+	return renderJson(map[string]interface{}{
+		"stdout": outputWriter.String(),
+		"stderr": errorWriter.String(),
+	}, ctx.W)
+
 }
 
 //
