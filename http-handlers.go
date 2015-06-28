@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"strings"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/mux"
@@ -90,10 +91,12 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 		return err
 	}
 
+	files := strings.Split(outputWriter.String(), "\n")
+
 	// TODO: parse into string
 	return renderJson(map[string]interface{}{
-		"stdout": outputWriter.String(),
-		"stderr": errorWriter.String(),
+		"files": files,
+		"error": errorWriter.String(),
 	}, ctx.W)
 
 }
