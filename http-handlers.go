@@ -17,15 +17,51 @@ func RouteIndex(ctx *Context) error {
 // Stop a codetainer
 //
 func RouteApiV1CodetainerStop(ctx *Context) error {
-	// TODO
+
+	if ctx.R.Method != "POST" {
+		return errors.New("POST only")
+	}
+
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+	endpoint := GlobalConfig.GetDockerEndpoint()
+	client, err := docker.NewClient(endpoint)
+	if err != nil {
+		return err
+	}
+
+	err = client.StopContainer(id, 30)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 //
-// Start a codetainer
+// Start a stopped codetainer
 //
 func RouteApiV1CodetainerStart(ctx *Context) error {
-	// TODO
+
+	if ctx.R.Method != "POST" {
+		return errors.New("POST only")
+	}
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+	endpoint := GlobalConfig.GetDockerEndpoint()
+	client, err := docker.NewClient(endpoint)
+	if err != nil {
+		return err
+	}
+
+	// TODO fetch config for codetainer
+	err = client.StartContainer(id, &docker.HostConfig{})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -34,13 +70,18 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 //
 func RouteApiV1CodetainerList(ctx *Context) error {
 	endpoint := GlobalConfig.GetDockerEndpoint()
-	_, err := docker.NewClient(endpoint)
+	client, err := docker.NewClient(endpoint)
 	if err != nil {
-
+		return err
 	}
+	containers, err := client.ListContainers(docker.ListContainersOptions{})
 
-	return nil
-	// TODO
+	if err != nil {
+		return err
+	}
+	return renderJson(map[string]interface{}{
+		"containers": containers,
+	}, ctx.W)
 }
 
 //

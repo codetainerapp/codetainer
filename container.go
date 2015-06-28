@@ -47,7 +47,8 @@ func (c *ContainerConnection) Start() error {
 
 func (c *ContainerConnection) openSocketToContainer() error {
 	id := c.id
-	u, err := url.Parse("http://komanda.io:4500/v1.5/containers/" + id + "/attach/ws?logs=1&stderr=1&stdout=1&stream=1&stdin=1")
+	endpoint := GlobalConfig.GetDockerEndpoint()
+	u, err := url.Parse(endpoint + "/v1.5/containers/" + id + "/attach/ws?logs=1&stderr=1&stdout=1&stream=1&stdin=1")
 	if err != nil {
 		return err
 	}

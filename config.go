@@ -8,12 +8,17 @@ import (
 )
 
 type Config struct {
-	DockerServer string
-	DockerPort   int
+	DockerServerUseHttps bool
+	DockerServer         string
+	DockerPort           int
 }
 
 func (c *Config) GetDockerEndpoint() string {
-	return fmt.Sprintf("%s:%d", c.DockerServer, c.DockerPort)
+	if c.DockerServerUseHttps {
+		return fmt.Sprintf("https://%s:%d", c.DockerServer, c.DockerPort)
+	} else {
+		return fmt.Sprintf("http://%s:%d", c.DockerServer, c.DockerPort)
+	}
 }
 
 var (
@@ -54,7 +59,6 @@ func NewConfig(configPath string) (*Config, error) {
 
 		f.Sync()
 		f.Close()
-
 	}
 
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
