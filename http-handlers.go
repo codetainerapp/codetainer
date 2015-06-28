@@ -80,8 +80,13 @@ func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	}
 
 	err = client.ResizeContainerTTY(id, height, width)
-	Log.Info("ERROR", err, height, width, " ", id)
-	return err
+
+	if err != nil {
+		return err
+	}
+	return renderJson(map[string]interface{}{
+		"success": true,
+	}, ctx.W)
 }
 
 //
