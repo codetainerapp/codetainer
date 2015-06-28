@@ -23,11 +23,12 @@ var (
 	// TimeFormat global time format string
 	TimeFormat = "15:04:05"
 
-	app    = kingpin.New(Name, Description)
-	debug  = app.Flag("debug", "Enable debug logging.").Short('v').Bool()
-	dev    = app.Flag("dev", "Enable dev mode.").Bool()
-	quiet  = app.Flag("quiet", "Remove all output logging.").Short('q').Bool()
-	appSSL = app.Flag("ssl", "Enable SSL (usefull outside nginx/apache).").Short('s').Bool()
+	app        = kingpin.New(Name, Description)
+	debug      = app.Flag("debug", "Enable debug logging.").Short('v').Bool()
+	dev        = app.Flag("dev", "Enable dev mode.").Bool()
+	quiet      = app.Flag("quiet", "Remove all output logging.").Short('q').Bool()
+	appSSL     = app.Flag("ssl", "Enable SSL (useful outside nginx/apache).").Short('s').Bool()
+	configPath = app.Flag("config", "Config path (default is config.toml)").Short('c').String()
 
 	server = app.Command("server", "Start the Codetainer control server.")
 
@@ -75,6 +76,14 @@ func main() {
 	args, perr := app.Parse(os.Args[1:])
 
 	initLogger()
+
+	config, err := NewConfig(*configPath)
+
+	if err != nil {
+		Log.Fatal(err)
+	} else {
+		GlobalConfig = *config
+	}
 
 	switch kingpin.MustParse(args, perr) {
 
