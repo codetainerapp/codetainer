@@ -38,27 +38,23 @@ func (c *ContainerConnection) write() {
 
 func (c *ContainerConnection) Start() error {
 
-	if client, err := newContainerClient(c.id); err != nil {
-		return err
-	} else {
-		c.container = client
-	}
+	c.openSocketToContainer()
 
 	go c.read()
 	c.write()
 	return nil
 }
 
-func newContainerClient(id string) (*websocket.Conn, error) {
-	//id := "9a58ba6db179"
+func (c *ContainerConnection) openSocketToContainer() error {
+	id := c.id
 	u, err := url.Parse("http://komanda.io:4500/v1.5/containers/" + id + "/attach/ws?logs=1&stderr=1&stdout=1&stream=1&stdin=1")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rawConn, err := net.Dial("tcp", u.Host)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	wsHeaders := http.Header{
@@ -70,5 +66,6 @@ func newContainerClient(id string) (*websocket.Conn, error) {
 	if err != nil {
 		Log.Error("Unable to connect", resp, err)
 	}
-	return wsConn, err
+	c.container = wsConn
+	return err
 }
