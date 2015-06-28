@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/dustin/go-humanize"
 	"github.com/gorilla/sessions"
+	"github.com/gorilla/websocket"
 )
 
 var funcs template.FuncMap = map[string]interface{}{
@@ -70,6 +70,7 @@ type Context struct {
 	Session *sessions.Session
 	W       http.ResponseWriter
 	R       *http.Request
+	WS      *websocket.Conn
 }
 
 func executeTemplate(ctx *Context, name string, status int, data interface{}) error {

@@ -7,10 +7,6 @@
 			"Rev": "6b4e7dc5e3143b85ea77909c72caf89416fc2915"
 		},
 		{
-			"ImportPath": "github.com/dustin/go-humanize",
-			"Rev": "c128122e0b9b93799aef8181a537e5d8fd7081d6"
-		},
-		{
 			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
 			"Rev": "3dcc96556217539f50599357fb481ac0dc7439b9"
 		},
@@ -29,6 +25,10 @@
 		{
 			"ImportPath": "github.com/gorilla/sessions",
 			"Rev": "f61c3ec2cf65d69e7efedfd4d060fe128882c951"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "a3ec486e6a7a41858210b0fc5d7b5df593b3c4a3"
 		},
 		{
 			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
