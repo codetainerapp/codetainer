@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	DockerServer string `toml:"-"`
+	DockerServer string
 	DockerPort   int
 }
 
