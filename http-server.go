@@ -45,6 +45,7 @@ func StartServer() {
 
 	// API v1
 	r.Handle("/api/v1/codetainer/{id}/view", handlerFunc(RouteApiV1CodetainerView))
+	r.Handle("/api/v1/codetainer/{id}/files", handlerFunc(RouteApiV1CodetainerListFiles))
 	r.Handle("/api/v1/codetainer/{id}/attach", handlerFunc(RouteApiV1CodetainerAttach))
 	r.Handle("/api/v1/codetainer/", handlerFunc(RouteApiV1CodetainerList))
 	r.Handle("/api/v1/codetainer/{id}/start", handlerFunc(RouteApiV1CodetainerStart))
