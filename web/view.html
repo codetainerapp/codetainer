@@ -1,32 +1,53 @@
 <!DOCTYPE html>
-<title>tty.js</title>
-<style>
-  h1 {
-    margin-bottom: 20px;
-    font: 20px/1.5 sans-serif;
-  }
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Codetainer</title>
 
-  .terminal {
-    float: left;
-    border: #000 solid 5px;
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 11px;
-    color: #f0f0f0;
-    background: #000;
-  }
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script src="/public/javascript/term.js"></script>
+  <script src="/public/javascript/connect.js"></script>
 
-  .reverse-video {
-    color: #000;
-    background: #f0f0f0;
-  }
-</style>
-<h1>tty.js</h1>
-<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script src="/public/javascript/term.js"></script>
-<script src="/public/javascript/codetainer.js"></script>
-<script src="/public/javascript/app.js"></script>
+  <style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  -webkit-box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  box-sizing:border-box;
+  background: #383734; /* grey bg */
+}
+    .terminal {
+      top: 0;
+      position: absolute;
+      display: block;
+      font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+      font-size: 11px;
+      color: #f0f0f0;
+      background: #000;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
 
-<div class="codetainer" data-container="b7908536107e" data-url="http://127.0.0.1:3000"></div>
+    .reverse-video {
+      color: #000;
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <script>
+    $(function() {
+      Codetainer.Build("<% .ContainerId %>");
+    });
+  </script>
+  
+</body>
+</html>
 
 
 

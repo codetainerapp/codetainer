@@ -41,7 +41,7 @@ func renderJson(data interface{}, w http.ResponseWriter) error {
 	return nil
 }
 
-func newTemplate(filename string) *template.Template {
+func newTemplate(filename string, includeLayout bool) *template.Template {
 	var file []byte
 	var err error
 
@@ -62,7 +62,14 @@ func newTemplate(filename string) *template.Template {
 		Log.Error(err)
 	}
 
-	layout := string(base) + string(helpers) + string(file)
+	var layout string
+
+	if includeLayout {
+		layout = string(base) + string(helpers) + string(file)
+	} else {
+		layout = string(helpers) + string(file)
+	}
+
 	return template.Must(template.New("*").Delims("<%", "%>").Funcs(funcs).Parse(layout))
 }
 
@@ -77,7 +84,14 @@ func executeTemplate(ctx *Context, name string, status int, data interface{}) er
 	ctx.W.Header().Set("Content-Type", "text/html; charset=utf-8")
 	ctx.W.WriteHeader(status)
 
-	return newTemplate(name).Execute(ctx.W, data)
+	return newTemplate(name, true).Execute(ctx.W, data)
+}
+
+func executeRaw(ctx *Context, name string, status int, data interface{}) error {
+	ctx.W.Header().Set("Content-Type", "text/html; charset=utf-8")
+	ctx.W.WriteHeader(status)
+
+	return newTemplate(name, false).Execute(ctx.W, data)
 }
 
 func GetRemoteAddr(req *http.Request) (string, error) {

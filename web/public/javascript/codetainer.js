@@ -24,10 +24,11 @@
   Codetainer.prototype.Build = function() {
     var self = this;
 
-    var url = self.options.url + "/codetainer/" +
-    self.options.container;
+    var url = self.options.url + "/api/v1/codetainer/" +
+    self.options.container + "/view";
 
-    var iframe = "<iframe title='Codetainer' scrollingi='no' " +
+    var iframe = "<iframe height='" + self.options.height + "'"+ 
+      "width='" + self.options.width + "' title='Codetainer' scrolling='no' " +
       "frameborder='0' allowfullscreen='true' " +
       "allowtransparency='true' " +
       "src='"+url+"'>" +
@@ -54,6 +55,8 @@
     var settings = $.extend({
       url: "https://localhost:3000",
       containerHost: "localhost:4500",
+      width: "600px",
+      height: "400px"
     }, options);
 
     $(this.selector).each(function(i, el) {

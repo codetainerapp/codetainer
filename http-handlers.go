@@ -105,3 +105,21 @@ func RouteApiV1CodetainerAttach(ctx *Context) error {
 
 	return nil
 }
+
+//
+// View codetainer
+//
+func RouteApiV1CodetainerView(ctx *Context) error {
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+
+	if id == "" {
+		return errors.New("ID of container must be provided")
+	}
+
+	return executeRaw(ctx, "view.html", 200, map[string]interface{}{
+		"Section":             "ContainerView",
+		"PageIsContainerView": true,
+		"ContainerId":         id,
+	})
+}
