@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"text/template"
 
+	"github.com/dustin/go-humanize"
 	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 )
+
+var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 
 var funcs template.FuncMap = map[string]interface{}{
 	"DateFormat": DateFormat,

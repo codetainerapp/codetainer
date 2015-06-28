@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
+	"github.com/gorilla/websocket"
 )
 
 // handlerFunc adapts a function to an http.Handler.
@@ -40,6 +42,7 @@ func StartServer() {
 	}
 
 	r.Handle("/", handlerFunc(RouteIndex))
+	r.Handle("/codetainer/{id}/attach", handlerFunc(RouteApiV1CodetainerAttach))
 
 	http.Handle("/", r)
 
@@ -78,6 +81,14 @@ func StartServer() {
 
 func (f handlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	source, err := GetRemoteAddr(r)
+	var ws *websocket.Conn
+
+	if strings.Contains(r.URL.String(), "/attach") {
+		ws, err = upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			Log.Debug(err)
+		}
+	}
 
 	if err != nil {
 		source = "N/A"
@@ -114,11 +125,13 @@ func (f handlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// }
 	// }
 	// }
+	//
 
 	context := &Context{
 		W:       w,
 		R:       r,
 		Session: session,
+		WS:      ws,
 		// current user stuff
 	}
 

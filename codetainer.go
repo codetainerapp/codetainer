@@ -44,27 +44,27 @@ var (
 )
 
 func initLogger() {
-	// Log = mlog.New()
+	Log = mlog.New()
 
-	// Log.Prefix = Name
+	Log.Prefix = Name
 
-	// if *debug {
-	// Log.SetLevel(mlog.DebugLevel)
-	// } else {
-	// Log.SetLevel(mlog.InfoLevel)
-	// }
+	if *debug {
+		Log.SetLevel(mlog.DebugLevel)
+	} else {
+		Log.SetLevel(mlog.InfoLevel)
+	}
 
-	// if *dev {
-	// DevMode = true
-	// Log.SetLevel(mlog.DebugLevel)
-	// Log.Info("DEBUG MODE ENABLED.")
-	// } else {
-	// DevMode = false
-	// }
+	if *dev {
+		DevMode = true
+		Log.SetLevel(mlog.DebugLevel)
+		Log.Info("DEBUG MODE ENABLED.")
+	} else {
+		DevMode = false
+	}
 
-	// if *quiet {
-	// Log.SetLevel(mlog.FatalLevel)
-	// }
+	if *quiet {
+		Log.SetLevel(mlog.FatalLevel)
+	}
 
 }
 
@@ -79,6 +79,7 @@ func main() {
 	switch kingpin.MustParse(args, perr) {
 
 	case server.FullCommand():
+		StartServer()
 
 	default:
 		app.Usage(os.Stdout)
