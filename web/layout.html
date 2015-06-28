@@ -1,36 +1,14 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
 
-<!doctype html>
-<title>tty.js</title>
-<!--
-  tty.js
-  Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
--->
-<style>
-  h1 {
-    margin-bottom: 20px;
-    font: 20px/1.5 sans-serif;
-  }
-
-  .terminal {
-    float: left;
-    border: #000 solid 5px;
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 11px;
-    color: #f0f0f0;
-    background: #000;
-  }
-
-  .reverse-video {
-    color: #000;
-    background: #f0f0f0;
-  }
-</style>
-<h1>tty.js</h1>
-<script src="/public/term.js"></script>
-<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script src="/public/codetainer.js"></script>
-
-<div data-docker-terminal-container="b7908536107e"
-  data-docker-terminal-host="komanda.io:4500"></div>
-
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script src="/public/javascript/codetainer.js"></script>
+  <script src="/public/javascript/app.js"></script>
+</head>
+<body>
+  <div class="codetainer" data-container="b7908536107e" data-host="komanda.io:4500"></div>
+</body>
+</html>

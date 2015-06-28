@@ -46,18 +46,15 @@ func newTemplate(filename string) *template.Template {
 	var err error
 
 	var base []byte
-	var main []byte
 	var helpers []byte
 
 	if DevMode {
 		file, err = ioutil.ReadFile("web/" + filename)
 		base, err = ioutil.ReadFile("web/layout.html")
-		main, err = ioutil.ReadFile("web/main.html")
 		helpers, err = ioutil.ReadFile("web/helpers.html")
 	} else {
 		file, err = Asset("web/" + filename)
 		base, err = Asset("web/layout.html")
-		main, err = Asset("web/main.html")
 		helpers, err = Asset("web/helpers.html")
 	}
 
@@ -65,7 +62,7 @@ func newTemplate(filename string) *template.Template {
 		Log.Error(err)
 	}
 
-	layout := string(base) + string(helpers) + string(main) + string(file)
+	layout := string(base) + string(helpers) + string(file)
 	return template.Must(template.New("*").Delims("<%", "%>").Funcs(funcs).Parse(layout))
 }
 
