@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/Unknwon/com"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/mux"
 )
@@ -13,6 +14,108 @@ func RouteIndex(ctx *Context) error {
 	return executeTemplate(ctx, "install.html", 200, map[string]interface{}{
 		"Section": "install",
 	})
+}
+
+func execInContainer(client *docker.Client,
+	id string,
+	command []string) (string, string, error) {
+
+	exec, err := client.CreateExec(docker.CreateExecOptions{
+		AttachStderr: true,
+		AttachStdin:  false,
+		AttachStdout: true,
+		Tty:          false,
+		Cmd:          command,
+		Container:    id,
+	})
+
+	if err != nil {
+		return "", "", err
+	}
+
+	var outputBytes []byte
+	outputWriter := bytes.NewBuffer(outputBytes)
+	var errorBytes []byte
+	errorWriter := bytes.NewBuffer(errorBytes)
+
+	err = client.StartExec(exec.ID, docker.StartExecOptions{
+		OutputStream: outputWriter,
+		ErrorStream:  errorWriter,
+	})
+
+	return outputWriter.String(), errorWriter.String(), err
+}
+
+func RouteApiV1CodetainerTTY(ctx *Context) error {
+	if ctx.R.Method == "POST" {
+		return RouteApiV1CodetainerUpdateCurrentTTY(ctx)
+	} else {
+		return RouteApiV1CodetainerGetCurrentTTY(ctx)
+	}
+}
+
+func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+	if id == "" {
+		return errors.New("id is required")
+	}
+
+	endpoint := GlobalConfig.GetDockerEndpoint()
+	client, err := docker.NewClient(endpoint)
+	if err != nil {
+		return err
+	}
+
+	height := com.StrTo(ctx.R.FormValue("height")).MustInt()
+
+	if height == 0 {
+		return errors.New("height is required")
+	}
+
+	width := com.StrTo(ctx.R.FormValue("width")).MustInt()
+
+	if width == 0 {
+		return errors.New("width is required")
+	}
+
+	err = client.ResizeContainerTTY(id, height, width)
+	Log.Info("ERROR", err, height, width, " ", id)
+	return err
+}
+
+//
+// Get TTY size
+//
+func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
+
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+	if id == "" {
+		return errors.New("id is required")
+	}
+
+	endpoint := GlobalConfig.GetDockerEndpoint()
+	client, err := docker.NewClient(endpoint)
+	if err != nil {
+		return err
+	}
+	col, _, err := execInContainer(client, id, []string{"tput", "cols"})
+	col = strings.Trim(col, "\n")
+	if err != nil {
+		return err
+	}
+	lines, _, err := execInContainer(client, id, []string{"tput", "lines"})
+	lines = strings.Trim(lines, "\n")
+	if err != nil {
+		return err
+	}
+
+	return renderJson(map[string]interface{}{
+		"col":  col,
+		"rows": lines,
+	}, ctx.W)
+
 }
 
 //
