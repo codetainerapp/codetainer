@@ -1,7 +1,13 @@
 package main
 
-import codetainer "github.com/codetainerapp/codetainer"
+import (
+	"runtime"
+
+	codetainer "github.com/codetainerapp/codetainer"
+)
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	codetainer.Start()
 }
