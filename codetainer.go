@@ -1,8 +1,7 @@
-package main
+package codetainer
 
 import (
 	"os"
-	"runtime"
 
 	"github.com/codetainerapp/codetainer/mlog"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
@@ -69,9 +68,7 @@ func initLogger() {
 
 }
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
+func Start() {
 	app.Version(Version)
 	args, perr := app.Parse(os.Args[1:])
 
