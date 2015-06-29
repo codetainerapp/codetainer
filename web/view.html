@@ -19,18 +19,30 @@
       background: #383734; /* grey bg */
     }
 
-    .terminal {
+    #codetainer {
+      color: #f0f0f0;
+      background: #000;
       top: 0;
       position: absolute;
       display: block;
-      font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-      font-size: 11px;
-      color: #f0f0f0;
-      background: #000;
       bottom: 0;
       right: 0;
       left: 0;
     }
+
+    .terminal {
+      border: #000000 solid 5px;
+      font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+      font-size: 11px;
+      color: #f0f0f0;
+      background: #000000;
+    }
+
+    .terminal-cursor {
+      color: #000000;
+      background: #f0f0f0;
+    }
+
 
     .reverse-video {
       color: #000;
@@ -40,6 +52,9 @@
 </head>
 
 <body>
+
+
+  <div id="codetainer"></div>
 
   <script>
     $(function() {

@@ -810,6 +810,10 @@ Terminal.prototype.refresh = function(start, end) {
     row = y + this.ydisp;
 
     line = this.lines[row];
+    // XXX
+    if (line === undefined) {
+      continue; 
+    }
     out = '';
 
     if (y === this.y
@@ -1079,7 +1083,10 @@ Terminal.prototype.write = function(data) {
                   this.scroll();
                 }
               }
-              this.lines[this.y + this.ybase][this.x] = [this.curAttr, ch];
+              // XXX
+              if (this.lines[this.y + this.ybase] != undefined) {
+                this.lines[this.y + this.ybase][this.x] = [this.curAttr, ch];
+              }
               this.x++;
               this.updateRange(this.y);
             }
