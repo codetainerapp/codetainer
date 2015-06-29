@@ -1,4 +1,4 @@
-package main
+package codetainer
 
 import (
 	"os"
@@ -69,7 +69,7 @@ func initLogger() {
 
 }
 
-func main() {
+func Start() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	app.Version(Version)

@@ -27,7 +27,7 @@ endif
 all: bindata
 	@mkdir -p bin/
 	@$(ECHO) "$(OK_COLOR)==> Building $(NAME) $(VERSION) $(NO_COLOR)"
-	@godep go build -o bin/$(NAME)
+	@godep go build -o bin/$(NAME) cmd/*
 	@chmod +x bin/$(NAME)
 	@$(ECHO) "$(OK_COLOR)==> Done building$(NO_COLOR)"
 
@@ -43,7 +43,7 @@ updatedeps:
 
 bindata:
 	@$(ECHO) "$(OK_COLOR)==> Embedding assets$(NO_COLOR)"
-	@go-bindata web/...
+	@go-bindata -pkg="codetainer" web/...
 
 test:
 	@$(ECHO) "$(OK_COLOR)==> Testing $(NAME)...$(NO_COLOR)"
