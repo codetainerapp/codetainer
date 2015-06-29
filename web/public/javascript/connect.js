@@ -1,5 +1,14 @@
 var Codetainer;
 
+function getTextWidth(text, font) {
+    // re-use canvas object for better performance
+    var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+    var context = canvas.getContext("2d");
+    context.font = font;
+    var metrics = context.measureText(text);
+    return metrics.width;
+};
+
 function resize(term) {
   console.log("IN RESIZE");
 
@@ -15,8 +24,8 @@ function resize(term) {
 
   console.log("word", x,y, $('body').height(), $("body").width())
 
-  Codetainer.Resize(x,y, function() {
-    // term.resize(x, y);
+  Codetainer.Resize(x, y, function() {
+    term.resize(x, y);
   });
 }
 
@@ -31,35 +40,32 @@ function getSize(element, cell) {
     y       = cell.clientHeight,
 
 
-
-    cols    = Math.max(Math.floor(w / x), 10),
+    cols    = Math.max(Math.floor(w / getTextWidth("X", "11pt monospace")), 10),
     rows    = Math.max(Math.floor(h / y), 10),
+
 
     size    = {
     cols: cols,
     rows: rows
   };
 
+    console.log("--- CELL --->", w, x, h, y)
+
   return size;
 }
 
 function createCell(element) {
-  // $("#cell-size").remove();
-
-  // var cell = $("<div id='cell-size'>").css({
-    // position: "absolute",
-    // top: "-10000px",
-  // }).text("&nbsp").appendTo(element);
-
-  // return cell.get(0);
-
   var cell            = document.createElement('div');
 
   cell.innerHTML      = '&nbsp';
   cell.style.position = 'absolute';
   cell.style.top      = '-1000px';
+  cell.style["white-space"] = "nowrap";
 
   element.appendChild(cell);
+
+  var s =  getTextWidth("X", "11pt monospace");
+  console.log("#############", s, Math.floor(s));
 
   return cell;
 }
@@ -125,20 +131,20 @@ Codetainer = {
         return callback(data);
       }
     }, function(a,b,c,d) {
-      // console.log("WTF", a,b,c,d)
+      console.log("WTF", a,b,c,d)
     });
   },
 
   Build: function(container) {
     this.id = container
 
-    Codetainer.Resize(80, 34, function() {
- 
+    Codetainer.Resize(80, 24, function() {
+
       var term = new Terminal({
         cols: 80,
         rows: 24,
         useStyle: false,
-        screenKeys: true,
+        // screenKeys: true,
         cursorBlink: true
       });
 
@@ -150,10 +156,9 @@ Codetainer = {
       var cell = createCell(div);
       var size = getSize(div, cell);
 
-
-    //  var resizeTerm = resize.bind(null, term);
-     // resizeTerm();
-      //window.onresize = resizeTerm;
+      var resizeTerm = resize.bind(null, term);
+      resizeTerm();
+      window.onresize = resizeTerm;
 
 
       console.log(term.element.offsetWidth, term.element.offsetHeight)
@@ -175,6 +180,8 @@ Codetainer = {
 
       function onOpen(evt) { 
         term.write("Session started");
+
+        resizeTerm();
       }  
 
       function onClose(evt) { 
