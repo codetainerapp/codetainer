@@ -32,6 +32,7 @@
       "frameborder='0' allowfullscreen='true' " +
       "allowtransparency='true' " +
       "src='"+url+"'>" +
+      "style='box-shadow: 0px 0px 6px rgba(214,214,214,0.87);' " +
       "</iframe>";
 
     self.$element.html(iframe);

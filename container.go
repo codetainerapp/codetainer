@@ -48,7 +48,7 @@ func (c *ContainerConnection) Start() error {
 func (c *ContainerConnection) openSocketToContainer() error {
 	id := c.id
 	endpoint := GlobalConfig.GetDockerEndpoint()
-	u, err := url.Parse(endpoint + "/v1.5/containers/" + id + "/attach/ws?logs=1&stderr=1&stdout=1&stream=1&stdin=1")
+	u, err := url.Parse(endpoint + "/v1.5/containers/" + id + "/attach/ws?logs=0&stderr=1&stdout=1&stream=1&stdin=1")
 	if err != nil {
 		return err
 	}

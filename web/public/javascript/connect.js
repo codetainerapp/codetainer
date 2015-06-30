@@ -12,7 +12,7 @@ function getTextWidth(text, font) {
 function resize(term) {
   console.log("IN RESIZE");
 
-  var div = document.getElementById("codetainer");
+  var div = document.getElementById("codetainer-terminal");
 
   var cell = createCell(div);
   console.log(cell)
@@ -149,12 +149,8 @@ Codetainer = {
       });
 
 
-      var div = document.getElementById("codetainer");
-
+      var div = document.getElementById("codetainer-terminal");
       term.open(div);
-
-      var cell = createCell(div);
-      var size = getSize(div, cell);
 
       var resizeTerm = resize.bind(null, term);
       resizeTerm();
@@ -180,7 +176,7 @@ Codetainer = {
 
       function onOpen(evt) { 
         term.write("Session started");
-
+        websocket.send("\n");
         resizeTerm();
       }  
 

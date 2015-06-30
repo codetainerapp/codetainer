@@ -8,54 +8,19 @@
   <script src="/public/javascript/term.js"></script>
   <script src="/public/javascript/connect.js"></script>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      -webkit-box-sizing:border-box;
-      -moz-box-sizing:border-box;
-      box-sizing:border-box;
-      background: #383734; /* grey bg */
-    }
-
-    #codetainer {
-      font-family: monospace;
-      font-size: 11pt;
-
-      color: #f0f0f0;
-      background: #000;
-      top: 5px;
-      position: absolute;
-      display: block;
-      bottom: 5px;
-      right: 5px;
-      left: 5px;
-    }
-
-    .terminal {
-      color: #f0f0f0;
-      background: #000000;
-      position: relative;
-      display: block;
-    }
-
-    .terminal-cursor {
-      color: #000000;
-      background: #f0f0f0;
-    }
-
-    .reverse-video {
-      color: #000;
-      background: #f0f0f0;
-    }
-  </style>
+  <link rel="stylesheet" href="/public/stylesheet/codetainer.css">
 </head>
 
 <body>
 
 
-  <div id="codetainer"></div>
+  <div id="codetainer">
+    <div class="codetainer-sidebar"></div>
+    <div class="codetainer-header"></div>
+    <div id="codetainer-terminal"></div>
+    <div class="codetainer-footer"></div>
+  </div>
+
 
   <script>
     $(function() {
