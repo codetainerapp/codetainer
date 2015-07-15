@@ -1,32 +1,16 @@
 var Codetainer;
 
 function getTextWidth(text, font) {
-    // re-use canvas object for better performance
-    var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    var context = canvas.getContext("2d");
-    context.font = font;
-    var metrics = context.measureText(text);
-    return metrics.width;
+  // re-use canvas object for better performance
+  var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+  var context = canvas.getContext("2d");
+  context.font = font;
+  var metrics = context.measureText(text);
+  return metrics.width;
 };
 
 function resize(term) {
-  console.log("IN RESIZE");
-
-  var div = document.getElementById("codetainer-terminal");
-
-  var cell = createCell(div);
-  console.log(cell)
-  var size = getSize(div, cell);
-
-
-  var x = size.cols
-  var y = size.rows
-
-  console.log("word", x,y, $('body').height(), $("body").width())
-
-  Codetainer.Resize(x, y, function() {
-    term.resize(x, y);
-  });
+  term.fit();
 }
 
 function getSize(element, cell) {
@@ -49,7 +33,7 @@ function getSize(element, cell) {
     rows: rows
   };
 
-    console.log("--- CELL --->", w, x, h, y)
+  console.log("--- CELL --->", w, x, h, y)
 
   return size;
 }
@@ -115,7 +99,6 @@ Codetainer = {
   },
 
   Resize: function(x, y, callback) {
-    console.log("Woprd?")
     Codetainer.Ajax.Fetch({
       url: "/api/v1/codetainer/" + Codetainer.id + "/tty",
       data: {
@@ -138,63 +121,75 @@ Codetainer = {
   Build: function(container) {
     this.id = container
 
-    Codetainer.Resize(80, 24, function() {
-
-      var term = new Terminal({
-        cols: 80,
-        rows: 24,
-        useStyle: false,
-        // screenKeys: true,
-        cursorBlink: true
-      });
+    var term = new Terminal({
+      cols: 80,
+      rows: 34,
+      useStyle: true,
+      screenKeys: true,
+      cursorBlink: true
+    });
 
 
-      var div = document.getElementById("codetainer-terminal");
-      term.open(div);
+    var div = document.getElementById("codetainer-terminal");
+    term.open(div);
 
-      var resizeTerm = resize.bind(null, term);
+    Codetainer.term = term;
+
+    var resizeTerm = resize.bind(null, Codetainer.term);
+    resizeTerm();
+    window.onresize = resizeTerm;
+
+
+    console.log(term.element.offsetWidth, term.element.offsetHeight)
+
+    var wsUri = "ws://127.0.0.1:3000/api/v1/codetainer/" + container + 
+    "/attach";
+
+    console.log(wsUri);
+
+    var websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+
+    term.on('data', function(data) {
+      websocket.send(data);
+    });
+
+    function onOpen(evt) { 
+      term.write("Session started");
+      websocket.send("\n");
       resizeTerm();
-      window.onresize = resizeTerm;
+    }  
+
+    function onClose(evt) { 
+      term.write("Session terminated");
+    }  
+
+    function onMessage(evt) { 
+      // console.log(evt);
+      term.write(evt.data);
+    }  
+
+    function onError(evt) { 
+    }  
 
 
-      console.log(term.element.offsetWidth, term.element.offsetHeight)
-
-      var wsUri = "ws://127.0.0.1:3000/api/v1/codetainer/" + container + 
-      "/attach";
-
-      console.log(wsUri);
-
-      var websocket = new WebSocket(wsUri);
-      websocket.onopen = function(evt) { onOpen(evt) };
-      websocket.onclose = function(evt) { onClose(evt) };
-      websocket.onmessage = function(evt) { onMessage(evt) };
-      websocket.onerror = function(evt) { onError(evt) };
-
-      term.on('data', function(data) {
-        websocket.send(data);
-      });
-
-      function onOpen(evt) { 
-        term.write("Session started");
-        websocket.send("\n");
-        resizeTerm();
-      }  
-
-      function onClose(evt) { 
-        term.write("Session terminated");
-      }  
-
-      function onMessage(evt) { 
-        // console.log(evt);
-        term.write(evt.data);
-      }  
-
-      function onError(evt) { 
-      }  
-
-
-    })
   },
 
 };
+
+Xterm.prototype.fit = function () {
+  var self = this;
+  var geometry = this.proposeGeometry();
+
+  console.log("IN RESIZE WORD!!!!!!!!", geometry)
+
+  self.resize(geometry.cols, geometry.rows);
+  Codetainer.Resize(geometry.cols, geometry.rows, function() {
+    self.resize(geometry.cols, geometry.rows);
+  });
+};
+
 

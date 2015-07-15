@@ -56,7 +56,7 @@
     var settings = $.extend({
       url: "https://localhost:3000",
       containerHost: "localhost:4500",
-      width: "600px",
+      width: "700px",
       height: "400px"
     }, options);
 

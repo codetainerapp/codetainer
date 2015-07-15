@@ -47,9 +47,8 @@ html, body {
 
 }
 
-#codetainer-terminal {
-  font-family: monospace;
-  font-size: 11pt;
+.codetainer-terminal-wrapper {
+  font-size: 13px;
   top: 35px;
   position: absolute;
   display: block;
@@ -60,13 +59,26 @@ html, body {
   background: #3E4045;
 }
 
-.terminal {
+#codetainer-terminal{
   color: #f0f0f0;
   background: none !important;
 
-  top: 0;
   position: absolute;
   display: block;
+  top: 5px;
+  bottom: 5px;
+  right: 5px;
+  left: 5px;
+}
+
+.terminal,
+.xterm-rows {
+  color: #f0f0f0;
+  background: none !important;
+
+  position: absolute;
+  display: block;
+  top: 0;
   bottom: 0;
   right: 0;
   left: 0;
@@ -99,6 +111,26 @@ html, body {
   left: 0;
 }
 
+.codetainer-header .logo{
+  text-align: center;
+  width: 200px;
+  font-size: 21px;
+  /* padding-left: 10px; */
+  border-right: 1px solid #ddd;
+}
+
+.codetainer-header .logo span{
+  display: inline-block;
+}
+
+.codetainer-header .logo span:first-child{
+  font-weight: bold;
+}
+
+.codetainer-header .logo span:last-child{
+  color: #9B9B9B;
+}
+
 .codetainer-sidebar{
   background: #ffffff;
   border-right: solid 1px #dadada;
@@ -128,3 +160,25 @@ html, body {
   right: 0;
   left: 0;
 }
+
+.footer-sidebar-options{
+  height: 35px;
+  width: 200px;
+  border-right: 1px solid #ddd;
+}
+
+a.footer-sidebar-button{
+  cursor: pointer;
+  display: inline-block;
+  height: 35px;
+  line-height: 35px;
+  padding: 0 12px;
+  text-decoration: none;
+  color: #867F7F;
+}
+
+a.footer-sidebar-button:hover{
+  background-color: #ddd;
+}
+
+.footer-main{}

@@ -5,20 +5,61 @@
   <title>Codetainer</title>
 
   <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-  <script src="/public/javascript/term.js"></script>
+  <script src="/public/javascript/xterm.js"></script>
+  <script src="/public/javascript/xterm-plugins.js"></script>
   <script src="/public/javascript/connect.js"></script>
 
+  <link rel="stylesheet" href="/public/stylesheet/font-awesome.css">
+  <link rel="stylesheet" href="/public/stylesheet/fonts.css">
   <link rel="stylesheet" href="/public/stylesheet/codetainer.css">
+  <link rel="stylesheet" href="/public/stylesheet/xterm.css">
 </head>
 
 <body>
 
 
   <div id="codetainer">
+
+    <!-- HEADER --!>
+    <div class="codetainer-header">
+    
+      <div class="logo">
+        <span>code</span><span>tainer</span>
+      </div>
+
+    </div>
+    <!-- END HEADER --!>
+
+    <!-- SIDEBAR --!>
     <div class="codetainer-sidebar"></div>
-    <div class="codetainer-header"></div>
-    <div id="codetainer-terminal"></div>
-    <div class="codetainer-footer"></div>
+    <!-- END SIDEBAR --!>
+
+
+    <!-- TERMINAL --!>
+    <div class="codetainer-terminal-wrapper">
+      <div id="codetainer-terminal"></div>
+    </div>
+    <!-- END TERMINAL --!>
+
+    <!-- FOOTER --!>
+    <div class="codetainer-footer">
+      <div class="footer-sidebar-options">
+        <a class="footer-sidebar-button">
+          <i class="fa fa-file"></i>
+        </a>
+
+        <a class="footer-sidebar-button">
+          <i class="fa fa-folder"></i>
+        </a>
+        
+        <a class="footer-sidebar-button">
+          <i class="fa fa-refresh"></i>
+        </a>
+      </div>
+
+      <div class="footer-main"></div>
+    </div>
+    <!-- END FOOTER --!>
   </div>
 
 
