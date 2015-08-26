@@ -27,8 +27,12 @@ endif
 all: bindata
 	@mkdir -p bin/
 	@$(ECHO) "$(OK_COLOR)==> Building $(NAME) $(VERSION) $(NO_COLOR)"
-	@godep go build -o bin/$(NAME) cmd/*
+	@godep go build -o bin/$(NAME) cmd/*.go
+	@mkdir -p bin/util/
+	@$(ECHO) "$(OK_COLOR)==> Building utils $(NO_COLOR)"
+	@godep go build -o bin/util/files cmd/util/files.go
 	@chmod +x bin/$(NAME)
+	@chmod +x bin/util/*
 	@$(ECHO) "$(OK_COLOR)==> Done building$(NO_COLOR)"
 
 build: bindata all

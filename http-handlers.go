@@ -149,6 +149,16 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 	return nil
 }
 
+type FileDesc struct {
+	name string
+	size int64
+}
+
+func parseFiles(output string) []FileDesc {
+	files := make([]FileDesc, 0)
+	return files
+}
+
 //
 // List files in a codetainer
 //
