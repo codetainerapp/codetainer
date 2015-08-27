@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"time"
 
+	codetainer "github.com/codetainerapp/codetainer"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
 )
 
@@ -15,25 +15,6 @@ var (
 	app     = kingpin.New("files", "Command for listing a file in JSON")
 	appPath = app.Flag("path", "path to list").Required().Short('s').String()
 )
-
-type ShortFileInfo struct {
-	Name    string
-	Size    int64
-	IsDir   bool
-	IsLink  bool
-	ModTime time.Time
-}
-
-func NewShortFileInfo(f os.FileInfo) *ShortFileInfo {
-	fi := ShortFileInfo{}
-	fi.Name = f.Name()
-	fi.Size = f.Size()
-	fi.IsDir = f.IsDir()
-	fi.ModTime = f.ModTime()
-	fi.IsLink = (f.Mode()&os.ModeType)&os.ModeSymlink > 0
-
-	return &fi
-}
 
 //
 // Go helper utility for container
@@ -57,9 +38,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sfiles := make([]*ShortFileInfo, 0)
+	sfiles := make([]*codetainer.ShortFileInfo, 0)
 	for _, f := range files {
-		sfile := NewShortFileInfo(f)
+		sfile := codetainer.NewShortFileInfo(f)
 		sfiles = append(sfiles, sfile)
 	}
 	bytes, err := json.Marshal(sfiles)

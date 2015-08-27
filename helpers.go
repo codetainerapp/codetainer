@@ -2,6 +2,7 @@ package codetainer
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"io"
 	"os"
 	"regexp"
@@ -93,4 +94,32 @@ func DateFormat(t time.Time, format string) string {
 	replacer := strings.NewReplacer(datePatterns...)
 	format = replacer.Replace(format)
 	return t.Format(format)
+}
+
+type ShortFileInfo struct {
+	Name    string
+	Size    int64
+	IsDir   bool
+	IsLink  bool
+	ModTime time.Time
+}
+
+func NewShortFileInfo(f os.FileInfo) *ShortFileInfo {
+	fi := ShortFileInfo{}
+	fi.Name = f.Name()
+	fi.Size = f.Size()
+	fi.IsDir = f.IsDir()
+	fi.ModTime = f.ModTime()
+	fi.IsLink = (f.Mode()&os.ModeType)&os.ModeSymlink > 0
+
+	return &fi
+}
+
+func makeShortFiles(data []byte) (*[]ShortFileInfo, error) {
+	files := make([]ShortFileInfo, 0)
+	if err := json.Unmarshal(data, &files); err != nil {
+		return nil, err
+	}
+
+	return &files, nil
 }

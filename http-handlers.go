@@ -186,7 +186,7 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 		AttachStdin:  false,
 		AttachStdout: true,
 		Tty:          false,
-		Cmd:          []string{"ls", path},
+		Cmd:          []string{"/codetainer/utils/files", "--path", path},
 		Container:    id,
 	})
 
@@ -199,7 +199,6 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 	var errorBytes []byte
 	errorWriter := bytes.NewBuffer(errorBytes)
 
-	// TODO fetch config for codetainer
 	err = client.StartExec(exec.ID, docker.StartExecOptions{
 		OutputStream: outputWriter,
 		ErrorStream:  errorWriter,
@@ -209,9 +208,11 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 		return err
 	}
 
-	files := strings.Split(outputWriter.String(), "\n")
+	files, err := makeShortFiles(outputWriter.Bytes())
+	if err != nil {
+		return err
+	}
 
-	// TODO: parse into string
 	return renderJson(map[string]interface{}{
 		"files": files,
 		"error": errorWriter.String(),
@@ -224,9 +225,11 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 //
 func RouteApiV1CodetainerStart(ctx *Context) error {
 
+	Log.Infof("Starting codetainer: %s", id)
 	if ctx.R.Method != "POST" {
 		return errors.New("POST only")
 	}
+
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 	endpoint := GlobalConfig.GetDockerEndpoint()
@@ -236,9 +239,14 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	}
 
 	// TODO fetch config for codetainer
-	err = client.StartContainer(id, &docker.HostConfig{})
+	err = client.StartContainer(id, &docker.HostConfig{
+		Binds: []string{
+			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+		},
+	})
 
 	if err != nil {
+		Log.Error(err)
 		return err
 	}
 

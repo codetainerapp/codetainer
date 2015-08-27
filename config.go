@@ -3,6 +3,7 @@ package codetainer
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
@@ -11,6 +12,11 @@ type Config struct {
 	DockerServerUseHttps bool
 	DockerServer         string
 	DockerPort           int
+}
+
+func (c *Config) UtilsPath() string {
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	return dir + "/util"
 }
 
 func (c *Config) GetDockerEndpoint() string {
