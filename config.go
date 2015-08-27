@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 type Config struct {
@@ -17,6 +18,11 @@ type Config struct {
 func (c *Config) UtilsPath() string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	return dir + "/util"
+}
+
+func (c *Config) GetDockerClient() (*docker.Client, error) {
+	endpoint := c.GetDockerEndpoint()
+	return docker.NewClient(endpoint)
 }
 
 func (c *Config) GetDockerEndpoint() string {

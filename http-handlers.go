@@ -61,8 +61,7 @@ func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 		return errors.New("id is required")
 	}
 
-	endpoint := GlobalConfig.GetDockerEndpoint()
-	client, err := docker.NewClient(endpoint)
+	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -100,8 +99,7 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 		return errors.New("id is required")
 	}
 
-	endpoint := GlobalConfig.GetDockerEndpoint()
-	client, err := docker.NewClient(endpoint)
+	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -134,8 +132,8 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
-	endpoint := GlobalConfig.GetDockerEndpoint()
-	client, err := docker.NewClient(endpoint)
+
+	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -175,8 +173,7 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 		return errors.New("path is required")
 	}
 
-	endpoint := GlobalConfig.GetDockerEndpoint()
-	client, err := docker.NewClient(endpoint)
+	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -225,15 +222,15 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 //
 func RouteApiV1CodetainerStart(ctx *Context) error {
 
-	Log.Infof("Starting codetainer: %s", id)
 	if ctx.R.Method != "POST" {
 		return errors.New("POST only")
 	}
 
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
-	endpoint := GlobalConfig.GetDockerEndpoint()
-	client, err := docker.NewClient(endpoint)
+
+	Log.Infof("Starting codetainer: %s", id)
+	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -257,8 +254,7 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 // List all running codetainers
 //
 func RouteApiV1CodetainerList(ctx *Context) error {
-	endpoint := GlobalConfig.GetDockerEndpoint()
-	client, err := docker.NewClient(endpoint)
+	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return err
 	}
