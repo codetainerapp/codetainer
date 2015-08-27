@@ -13,6 +13,24 @@ type Config struct {
 	DockerServerUseHttps bool
 	DockerServer         string
 	DockerPort           int
+	DatabasePath         string
+}
+
+func (c *Config) GetDatabasePath() string {
+
+	if c.DatabasePath != "" {
+		basePath := "/var/lib/codetainer/"
+		c.DatabasePath = basePath + "codetainer.db"
+
+		if _, err := os.Stat(c.DatabasePath); err != nil {
+			if os.IsNotExist(err) {
+				os.MkdirAll("/var/lib/codetainer", 0600)
+			} else {
+				Log.Fatal(err)
+			}
+		}
+	}
+	return c.DatabasePath
 }
 
 func (c *Config) UtilsPath() string {

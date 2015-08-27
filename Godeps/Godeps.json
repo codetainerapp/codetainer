@@ -28,6 +28,15 @@
 			"Rev": "b4c54554c99a08bf55cfd1d5c7a623a5b00f0983"
 		},
 		{
+			"ImportPath": "github.com/go-xorm/core",
+			"Rev": "4813c0110dc4ea27e05d77425385b4cd4abfe81b"
+		},
+		{
+			"ImportPath": "github.com/go-xorm/xorm",
+			"Comment": "v0.4.3-38-gadadb47",
+			"Rev": "adadb47c60fcb8c6ed4029620eb152f47ec92d0e"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 		},
@@ -46,6 +55,11 @@
 		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Rev": "a3ec486e6a7a41858210b0fc5d7b5df593b3c4a3"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Comment": "v1.0.0-9-g897b880",
+			"Rev": "897b8800a7d1a93518b87c00e5d1c5d7476f3701"
 		},
 		{
 			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
