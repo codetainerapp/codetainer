@@ -169,7 +169,9 @@ Codetainer = {
 
     function onMessage(evt) { 
       // console.log(evt);
-      term.write(evt.data);
+      var data = evt.data.replace(/\+/g, '%20'); 
+      data = decodeURIComponent(data)
+      term.write(data);
     }  
 
     function onError(evt) { 
