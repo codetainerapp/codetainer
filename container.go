@@ -36,12 +36,7 @@ func (c *ContainerConnection) read() {
 }
 
 func (c *ContainerConnection) write() {
-	// r1 := string([]rune{0xd800})
-	// r2 := string([]rune{0xdfff})
-	// r, _ := regexp.Compile("[\x00-\x1f" + r1 + "-" + r2 + "]")
-	// r, _ := regexp.Compile("[\x00-\x1f" + r1 + "-"
-	//	+ r2 + "-\u200f\u2028-\u202f\u2060-\u206f\ufff0-\uffff]")
-	// empty := make([]byte, 0)
+
 	for {
 		_, message, err := c.container.ReadMessage()
 		if err != nil {

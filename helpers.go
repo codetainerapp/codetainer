@@ -19,6 +19,17 @@ var (
 	rxEmail = regexp.MustCompile(Email)
 )
 
+func fileExists(filePath string) bool {
+
+	_, err := os.Stat(filePath)
+
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}
+
 func ComputeMd5(filePath string) ([]byte, error) {
 	var result []byte
 	file, err := os.Open(filePath)

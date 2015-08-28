@@ -307,3 +307,18 @@ func RouteApiV1CodetainerView(ctx *Context) error {
 		"ContainerId":         id,
 	})
 }
+
+func RouteApiV1CodetainerListImages(ctx *Context) error {
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		return err
+	}
+	images, err := db.ListCodetainerImages()
+	if err != nil {
+		return err
+	}
+
+	return renderJson(map[string]interface{}{
+		"images": images,
+	}, ctx.W)
+}

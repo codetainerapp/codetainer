@@ -14,6 +14,22 @@ type Config struct {
 	DockerServer         string
 	DockerPort           int
 	DatabasePath         string
+	database             *Database
+}
+
+func (c *Config) GetDatabase() (*Database, error) {
+	// TODO cache db
+
+	if c.database != nil {
+		return c.database, nil
+	}
+
+	db, err := NewDatabase(c.GetDatabasePath())
+	if err != nil {
+		return nil, err
+	}
+	c.database = db
+	return c.database, nil
 }
 
 func (c *Config) GetDatabasePath() string {
@@ -24,7 +40,7 @@ func (c *Config) GetDatabasePath() string {
 
 		if _, err := os.Stat(c.DatabasePath); err != nil {
 			if os.IsNotExist(err) {
-				os.MkdirAll("/var/lib/codetainer", 0600)
+				os.MkdirAll("/var/lib/codetainer", 0700)
 			} else {
 				Log.Fatal(err)
 			}
