@@ -53,11 +53,14 @@ func (c *ContainerConnection) write() {
 
 func (c *ContainerConnection) Start() error {
 
-	c.openSocketToContainer()
+	err := c.openSocketToContainer()
 
-	go c.read()
-	c.write()
-	return nil
+	if err == nil {
+		go c.read()
+		c.write()
+
+	}
+	return err
 }
 
 func (c *ContainerConnection) openSocketToContainer() error {

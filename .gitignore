@@ -34,3 +34,6 @@ node_modules
 
 # generated config
 config.toml
+
+# codetainer db
+codetainer.db

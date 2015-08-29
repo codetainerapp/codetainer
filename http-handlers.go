@@ -218,6 +218,69 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 }
 
 //
+// Create a codetainer
+//
+func RouteApiV1CodetainerCreate(ctx *Context) error {
+
+	if ctx.R.Method != "POST" {
+		return errors.New("POST only")
+	}
+
+	imageId := ctx.R.FormValue("image-id")
+	name := ctx.R.FormValue("name")
+
+	Log.Infof("Creating codetainer from image: %s", imageId)
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		return err
+	}
+
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		return err
+	}
+
+	image, err := db.LookupCodetainerImage(imageId)
+	if err != nil {
+		return err
+	}
+	if image == nil {
+		return errors.New("no image found")
+	}
+
+	// TODO: all the other configs
+	c, err := client.CreateContainer(docker.CreateContainerOptions{
+		Name: name,
+		Config: &docker.Config{
+			OpenStdin: true,
+			Tty:       true,
+			Image:     image.Id,
+		},
+		HostConfig: &docker.HostConfig{
+			Binds: []string{
+				GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+			},
+		},
+	})
+
+	// TODO fetch config for codetainer
+	err = client.StartContainer(c.ID, &docker.HostConfig{
+		Binds: []string{
+			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+		},
+	})
+
+	db.SaveCodetainer(c.ID, imageId)
+
+	if err != nil {
+		Log.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+//
 // Start a stopped codetainer
 //
 func RouteApiV1CodetainerStart(ctx *Context) error {
@@ -250,6 +313,14 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	return nil
 }
 
+func RouteApiV1Codetainer(ctx *Context) error {
+	if ctx.R.Method == "POST" {
+		return RouteApiV1CodetainerCreate(ctx)
+	} else {
+		return RouteApiV1CodetainerList(ctx)
+	}
+}
+
 //
 // List all running codetainers
 //
@@ -280,14 +351,14 @@ func RouteApiV1CodetainerAttach(ctx *Context) error {
 	}
 
 	if ctx.WS == nil {
-		return errors.New("No websocket connection for web client")
+		return errors.New("No websocket connection for web client: " + ctx.R.URL.String())
 	}
 
 	connection := &ContainerConnection{id: id, web: ctx.WS}
 
-	connection.Start()
+	err := connection.Start()
 
-	return nil
+	return err
 }
 
 //
@@ -308,6 +379,9 @@ func RouteApiV1CodetainerView(ctx *Context) error {
 	})
 }
 
+//
+// List images
+//
 func RouteApiV1CodetainerListImages(ctx *Context) error {
 	db, err := GlobalConfig.GetDatabase()
 	if err != nil {
