@@ -87,6 +87,10 @@ func Start() {
 		GlobalConfig = *config
 	}
 
+	if !config.TestConfig() {
+		Log.Fatal("Invalid configuration detected.")
+	}
+
 	switch kingpin.MustParse(args, perr) {
 
 	case server.FullCommand():
