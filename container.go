@@ -63,6 +63,23 @@ func (c *ContainerConnection) Start() error {
 	return err
 }
 
+func (c *ContainerConnection) SendSingleMessage(msg string) error {
+
+	err := c.openSocketToContainer()
+
+	if err != nil {
+		return err
+	}
+
+	err = c.container.WriteMessage(websocket.TextMessage, []byte(msg))
+	if err != nil {
+		return err
+	}
+
+	err = c.container.Close()
+	return err
+}
+
 func (c *ContainerConnection) openSocketToContainer() error {
 	id := c.id
 	endpoint := GlobalConfig.GetDockerEndpoint()

@@ -263,6 +263,11 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 		},
 	})
 
+	if err != nil {
+		Log.Error("unable to create container: "+name, err)
+		return err
+	}
+
 	// TODO fetch config for codetainer
 	err = client.StartContainer(c.ID, &docker.HostConfig{
 		Binds: []string{
@@ -270,14 +275,22 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 		},
 	})
 
-	db.SaveCodetainer(c.ID, imageId)
+	if err != nil {
+		Log.Error(err)
+		return err
+	}
+
+	codetainer, err := db.SaveCodetainer(c.ID, imageId)
 
 	if err != nil {
 		Log.Error(err)
 		return err
 	}
 
-	return nil
+	return renderJson(map[string]interface{}{
+		"codetainer": codetainer,
+		"error":      "",
+	}, ctx.W)
 }
 
 //
@@ -337,6 +350,33 @@ func RouteApiV1CodetainerList(ctx *Context) error {
 	return renderJson(map[string]interface{}{
 		"containers": containers,
 	}, ctx.W)
+}
+
+//
+// Send a command to a container
+//
+func RouteApiV1CodetainerSend(ctx *Context) error {
+	vars := mux.Vars(ctx.R)
+
+	if ctx.R.Method != "POST" {
+		return errors.New("POST only")
+	}
+
+	id := vars["id"]
+
+	if id == "" {
+		return errors.New("ID of container must be provided")
+	}
+
+	cmd := ctx.R.FormValue("command")
+
+	Log.Infof("Sending command to container: %s -> %s ", id, cmd)
+
+	connection := &ContainerConnection{id: id, web: ctx.WS}
+
+	err := connection.SendSingleMessage(cmd + "\n")
+
+	return err
 }
 
 //

@@ -148,10 +148,13 @@ func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
 	}
 }
 
-func (db *Database) SaveCodetainer(id string, imageId string) error {
+func (db *Database) SaveCodetainer(id string, imageId string) (*Codetainer, error) {
 	c := Codetainer{Id: id, ImageId: imageId, Defunct: false}
 	_, err := db.engine.Insert(&c)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return &c, err
 }
 
 //
