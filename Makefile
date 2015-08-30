@@ -60,7 +60,7 @@ gox:
 	@$(ECHO) "$(OK_COLOR)==> Cross compiling $(NAME)$(NO_COLOR)"
 	@mkdir -p Godeps/_workspace/src/github.com/$(GITHUB_USER)/$(NAME)
 	@cp -R *.go Godeps/_workspace/src/github.com/$(GITHUB_USER)/$(NAME)
-	@CGO_ENABLED=1 GOPATH=$(shell godep path) gox -ldflags "-s" -os="$(CCOS)" -arch="$(CCARCH)" -output=$(CCOUTPUT)
+	@CGO_ENABLED=1 GOPATH=$(shell godep path) gox -ldflags "-s" -os="$(CCOS)" -arch="$(CCARCH)" -output=$(CCOUTPUT) cmd/*.go
 	@rm -rf Godeps/_workspace/src/github.com/$(GITHUB_USER)/$(NAME)
 
 release: clean all test gox setup package
@@ -86,6 +86,7 @@ clean:
 setup:
 	@$(ECHO) "$(OK_COLOR)==> Building packages $(NAME)$(NO_COLOR)"
 	@echo $(VERSION) > .Version
+	@mkdir -p pkg/
 	@mkdir -p package/root/usr/bin
 	@cp -R pkg/linux-amd64/$(NAME) package/root/usr/bin
 	@mkdir -p release/

@@ -1,0 +1,26 @@
+image: mephux/docker-golang
+branches:
+  - master
+  - develop
+git:
+  path: github.com/codetainerapp/codetainer
+script:
+  - make test
+notify:
+  email:
+    recipients:
+      - dustin.webber@gmail.com
+      - jandre@gmail.com
+publish:
+  github:
+    branch: master
+    script:
+    artifacts:
+      - release
+    tag: v$(cat .Version)
+    token: $$GITHUB_TOKEN
+    user: mephux
+    repo: codetainer
+    when: 
+      branch: master
+      pull_requests: false
