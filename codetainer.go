@@ -100,7 +100,7 @@ func Start() {
 		RegisterCodetainerImage(*registerImageId, *registerCommand)
 
 	default:
-		app.Usage([]string{})
+		app.Usage(os.Stdout)
 	}
 
 }
