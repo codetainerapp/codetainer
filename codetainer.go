@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/codetainerapp/codetainer/mlog"
-	kingpin "gopkg.in/alecthomas/kingpin.v1"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
@@ -12,7 +12,7 @@ const (
 	Name = "Codetainer"
 
 	// Description
-	Description = "--"
+	Description = ""
 
 	// Version application version number
 	Version = "0.1.0"
@@ -88,7 +88,7 @@ func Start() {
 		StartServer()
 
 	default:
-		app.Usage(os.Stdout)
+		app.Usage([]string{})
 	}
 
 }
