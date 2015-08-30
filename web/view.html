@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <title>Codetainer</title>
 
-  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script src="/public/javascript/jquery.js"></script>
+  <script src="/public/javascript/handlebars.js"></script>
   <script src="/public/javascript/xterm.js"></script>
   <script src="/public/javascript/xterm-plugins.js"></script>
   <script src="/public/javascript/connect.js"></script>
@@ -17,29 +18,19 @@
 
 <body>
 
-
   <div id="codetainer">
-
     <!-- HEADER --!>
     <div class="codetainer-header">
-    
       <div class="logo">
         <span>code</span><span>tainer</span>
       </div>
-
     </div>
     <!-- END HEADER --!>
 
-    <!-- SIDEBAR --!>
-    <div class="codetainer-sidebar"></div>
-    <!-- END SIDEBAR --!>
 
-
-    <!-- TERMINAL --!>
-    <div class="codetainer-terminal-wrapper">
-      <div id="codetainer-terminal"></div>
-    </div>
-    <!-- END TERMINAL --!>
+    <!-- CONTENT --!>
+    <div class="codetainer-content"></div>
+    <!-- END CONTENT --!>
 
     <!-- FOOTER --!>
     <div class="codetainer-footer">
@@ -48,7 +39,7 @@
           <i class="fa fa-file"></i>
         </a>
 
-        <a class="footer-sidebar-button">
+        <a class="create-new-folder footer-sidebar-button">
           <i class="fa fa-folder"></i>
         </a>
         
@@ -60,8 +51,48 @@
       <div class="footer-main"></div>
     </div>
     <!-- END FOOTER --!>
+
   </div>
 
+
+  <div class="Templates" style="display:none;">
+    <script id="codetainer-tab-control" type="text/x-handlebars-template">
+      <!-- Tab Control --!>
+      <div class="codetainer-tabs">
+        <ul class="nav nav-tabs" style="max-width: 100%;">
+        </ul>
+      </div>
+      <!-- END Tab Control --!>
+    </script>
+
+    <script id="codetainer-tab-new" type="text/x-handlebars-template">
+      <li id="{{tabId}}" class='{{#if options.active}}active{{/if}}'>
+        <a href="#">
+          {{#unless options.terminal}}
+            <i id="{{tabId}}-close" class="fa fa-remove"></i>
+          {{/unless}}
+          {{options.name}}
+        </a>
+      </li>
+    </script>
+
+    <script id="codetainer-content" type="text/x-handlebars-template">
+      <div id="{{contentId}}" class="codetainer-tab-content" style="display:none;">
+        {{#if options.terminal}}
+          <div id="codetainer-terminal"></div>
+        {{else}}
+          {{options.content}}
+        {{/if}}
+      </div>
+    </script>
+
+    <script id="codetainer-sidebar" type="text/x-handlebars-template">
+    <!-- SIDEBAR --!>
+    <div class="codetainer-sidebar"></div>
+    <!-- END SIDEBAR --!>
+    </script>
+
+  </div>
 
   <script>
     $(function() {

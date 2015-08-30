@@ -47,7 +47,7 @@ html, body {
 
 }
 
-.codetainer-terminal-wrapper {
+.codetainer-content {
   font-size: 13px;
   top: 35px;
   position: absolute;
@@ -168,6 +168,10 @@ html, body {
 }
 
 a.footer-sidebar-button{
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
   cursor: pointer;
   display: inline-block;
   height: 35px;
@@ -182,3 +186,126 @@ a.footer-sidebar-button:hover{
 }
 
 .footer-main{}
+
+
+/* @Group Tags */
+
+.codetainer-tabs{
+  position: absolute;
+  left: 202px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+
+}
+
+.codetainer-tabs > *{
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+}
+
+
+.nav {
+  margin-bottom: 0;
+  padding-top: 0;
+  margin-top: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.nav>li {
+  position: relative;
+  display: block;
+}
+
+.nav>li>a {
+  position: relative;
+  display: block;
+  padding: 5px 7px 6px 7px;
+  /* height: 30px; */
+  /* line-height: 30px; */
+}
+
+.nav>li>a>i{
+  margin-left: 1px;
+  opacity: 0.5;
+}
+
+.nav>li:hover>a>i{
+  opacity: 1;
+}
+
+.nav>li>a:hover,.nav>li>a:focus {
+  text-decoration: none;
+  background-color: #eee;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid #ddd;
+  display: inline-flex;
+}
+
+.nav-tabs>li {
+  margin-bottom: -1px;
+  flex-shrink: 1;
+  min-width: 1em;
+  overflow: hidden;
+}
+
+.nav-tabs>li>a {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.8em;
+  text-decoration: none;
+
+
+  margin-right: 2px;
+  line-height: 1.42857143;
+  border: 1px solid transparent;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.nav-tabs>li>a:after {
+  /* background: linear-gradient(to right,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%); [> W3C <] */
+  /* content: ""; */
+  /* position: absolute; */
+  /* top: 4px; right: 0px; bottom: 1px; */
+  /* width: 30px; */
+}
+
+.nav-tabs>li>a:hover {
+  border-color: #eee #eee #ddd;
+}
+
+.nav-tabs>li.active {
+  flex-grow: 1;
+  overflow: visible;
+}
+
+.nav-tabs>li.active>a {
+  text-overflow: initial;
+}
+
+.nav-tabs>li>a,.nav-tabs>li>a:hover,.nav-tabs>li>a:focus {
+  color: #555;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.nav-tabs>li.active>a,.nav-tabs>li.active>a:hover,.nav-tabs>li.active>a:focus {
+  background-color: #3E4045 !important;
+  color: #fff !important;
+  color: #555;
+  border: 1px solid #ddd;
+  border-bottom-color: transparent;
+  cursor: default;
+}
+
+.measure {
+  position: absolute !important;
+}
+/* @end */

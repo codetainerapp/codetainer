@@ -2,6 +2,12 @@ bin/
 doc/
 bindata.go
 
+log/
+pkg/
+release/
+.Version
+package/
+
 # Logs
 logs
 *.log

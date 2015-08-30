@@ -1,5 +1,142 @@
 var Codetainer;
 
+var TabControl;
+function TabControl(options) {
+  var self = this;
+  self.options = options;
+  self.tabs = [];
+
+  return this;
+}
+
+TabControl.prototype.Render = function() {
+  var self = this;
+
+  $(".codetainer-header").append(Codetainer.Templates.tabs({}));
+
+  return self;
+}
+
+TabControl.prototype.Add = function(data) {
+  var self = this;
+
+  data.position = 0
+
+  if (self.tabs.length > 0) {
+    data.position = self.tabs[self.tabs.length-1].options.position + 1;
+  } 
+
+  var tab = new Tab(data);
+  self.tabs.push(tab);
+
+  tab.Render();
+
+  return tab;
+}
+
+TabControl.prototype.Remove = function(tab) {
+  var self = this;
+
+  tab.Remove();
+
+  for (item in Codetainer.Tabs.tabs) {
+    var t = Codetainer.Tabs.tabs[item];
+
+    console.log(t.tabId, tab.tabId)
+
+    if (t.tabId === tab.tabId) {
+      var newindex = item - 1;
+
+      if (item <= 0) {
+        self.tabs[0].Show();
+      } else {
+        if (!self.tabs[0].open) {
+          self.tabs[newindex].Show();
+        }
+      }
+      self.tabs.splice(item, 1)
+      console.log(self.tabs)
+      return self;
+    }
+  }
+
+  return self;
+}
+
+var Tab;
+function Tab(options) {
+  var self = this;
+  self.options = options;
+  self.tabId = Codetainer.id + "-" + self.options.position + "-tab";
+  self.contentId = self.tabId + "-content";
+
+  self.open = false;
+  return this;
+}
+
+Tab.prototype.Render = function() {
+  var self = this;
+
+  var content = Codetainer.Templates.content(self);
+  var tab = Codetainer.Templates.newTab(self);
+  $(".codetainer-tabs .nav").append(tab);
+  $(".codetainer-content").append(content);
+
+  $("#" + self.tabId).on("click", "", function(e) {
+    e.preventDefault()
+
+    if (!self.open) {
+      self.Show();
+    }
+  });
+
+  $("#" + self.tabId + "-close").on("click", "", function(e) {
+    e.preventDefault()
+    e.stopPropagation();
+
+    Codetainer.Tabs.Remove(self)
+  });
+
+  return self;
+}
+
+Tab.prototype.Show = function() {
+  var self = this;
+  self.open = true;
+
+  for (tab in Codetainer.Tabs.tabs) {
+    var t = Codetainer.Tabs.tabs[tab];
+
+    if (t.tabId !== self.tabId) {
+      t.Hide();
+    }
+  }
+
+  // $(".codetainer-tabs li").removeClass("active");
+  $("#" + self.tabId).addClass("active");
+  $("#" + self.contentId).show();
+
+  return self;
+}
+
+Tab.prototype.Hide = function() {
+  var self = this;
+  self.open = false;
+  $("#" + self.tabId).removeClass("active");
+  $("#" + self.contentId).hide();
+  return self;
+}
+
+Tab.prototype.Remove = function() {
+  var self = this;
+  self.open = false;
+  $("#" + self.tabId + "-close").off();
+  $("#" + self.tabId).off().remove();
+  $("#" + self.contentId).remove();
+  return self;
+}
+
+
 function getTextWidth(text, font) {
   // re-use canvas object for better performance
   var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
@@ -33,8 +170,6 @@ function getSize(element, cell) {
     rows: rows
   };
 
-  console.log("--- CELL --->", w, x, h, y)
-
   return size;
 }
 
@@ -49,13 +184,47 @@ function createCell(element) {
   element.appendChild(cell);
 
   var s =  getTextWidth("X", "11pt monospace");
-  console.log("#############", s, Math.floor(s));
 
   return cell;
 }
 
 Codetainer = {
   id: "",
+
+  Templates: {
+    Init: function() {
+      var self = this;
+
+      self.tabs = Handlebars.compile($("#codetainer-tab-control").html());
+      self.newTab = Handlebars.compile($("#codetainer-tab-new").html());
+      self.content = Handlebars.compile($("#codetainer-content").html());
+      self.sidebar = Handlebars.compile($("#codetainer-sidebar").html());
+
+      Handlebars.registerHelper ('truncate', function(str, len) {
+        if (str.length > len) {
+          var new_str = str.substr (0, len + 1);
+
+          while (new_str.length) {
+            var ch = new_str.substr (-1);
+            new_str = new_str.substr (0, -1);
+
+            if (ch == ' ') {
+              break;
+            }
+          }
+
+          if (new_str == '') {
+            new_str = str.substr (0, len);
+          }
+
+          return new Handlebars.SafeString (new_str + '...');
+        }
+        return str;
+      });
+    }
+  },
+
+  Tabs: null,
 
   Ajax: {
     Cache: {},
@@ -108,7 +277,6 @@ Codetainer = {
       dataType: "json",
       type: "post"
     }, function(data) {
-      console.log("HJELLLLO", data);
 
       if (callback && typeof callback === "function") {
         return callback(data);
@@ -121,6 +289,8 @@ Codetainer = {
   Build: function(container) {
     this.id = container
 
+    Codetainer.Templates.Init()
+
     var term = new Terminal({
       cols: 80,
       rows: 34,
@@ -129,6 +299,15 @@ Codetainer = {
       cursorBlink: true
     });
 
+    Codetainer.Tabs = new TabControl();
+    Codetainer.Tabs.Render().Add({
+      name: "Terminal",
+      terminal: true,
+      active: true,
+      content: function() {
+        return Codetainer.Templates.terminal({});
+      }
+    }).Show();
 
     var div = document.getElementById("codetainer-terminal");
     term.open(div);
@@ -140,13 +319,9 @@ Codetainer = {
     window.onresize = resizeTerm;
 
 
-    console.log(term.element.offsetWidth, term.element.offsetHeight)
-
     var host = location.hostname + ":" + location.port;
     var wsUri = "ws://" + host + "/api/v1/codetainer/" + container + 
     "/attach";
-
-    console.log(wsUri);
 
     var websocket = new WebSocket(wsUri);
     websocket.onopen = function(evt) { onOpen(evt) };
@@ -169,7 +344,6 @@ Codetainer = {
     }  
 
     function onMessage(evt) { 
-      // console.log(evt);
       var data = evt.data.replace(/\+/g, '%20'); 
       data = decodeURIComponent(data)
       term.write(data);
@@ -178,21 +352,37 @@ Codetainer = {
     function onError(evt) { 
     }  
 
-
+    $(".create-new-folder").on("click", function(e) {
+      e.preventDefault();
+      Codetainer.Tabs.Add({
+        name: Blahtest(),
+        content: function() {
+          return Blahtest();
+        }
+      })
+    });
   },
-
 };
 
 Xterm.prototype.fit = function () {
   var self = this;
   var geometry = this.proposeGeometry();
 
-  console.log("IN RESIZE WORD!!!!!!!!", geometry)
-
   self.resize(geometry.cols, geometry.rows);
   Codetainer.Resize(geometry.cols, geometry.rows, function() {
     self.resize(geometry.cols, geometry.rows);
   });
 };
+
+function Blahtest()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < 10; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
 
 
