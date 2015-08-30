@@ -2,6 +2,7 @@ NAME="codetainer"
 DESCRIPTION=""
 WEBSITE="http://codetainer.org"
 
+SHA := $(shell git rev-parse --short HEAD)
 VERSION=$(shell cat $(NAME).go | grep "Version =" | sed 's/Version\ \=//' | sed 's/"//g' | tr -d '[[:space:]]')
 CWD=$(shell pwd)
 
@@ -27,7 +28,7 @@ endif
 all: bindata
 	@mkdir -p bin/
 	@$(ECHO) "$(OK_COLOR)==> Building $(NAME) $(VERSION) $(NO_COLOR)"
-	@godep go build -o bin/$(NAME) cmd/*.go
+	@godep go build -o bin/$(NAME) -ldflags "-w -s -X main.Build=$(SHA)" cmd/*.go
 	@mkdir -p bin/util/
 	@$(ECHO) "$(OK_COLOR)==> Building utils $(NO_COLOR)"
 	@godep go build -o bin/util/files cmd/util/files.go

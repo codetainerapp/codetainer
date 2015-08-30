@@ -1,6 +1,7 @@
 package codetainer
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/codetainerapp/codetainer/mlog"
@@ -19,6 +20,9 @@ const (
 )
 
 var (
+	// Build SHA
+	Build string
+
 	// TimeFormat global time format string
 	TimeFormat = "15:04:05"
 
@@ -74,7 +78,7 @@ func initLogger() {
 }
 
 func Start() {
-	app.Version(Version)
+	app.Version(fmt.Sprintf("Version: %s Build: %s", Version, Build))
 	args, perr := app.Parse(os.Args[1:])
 
 	initLogger()

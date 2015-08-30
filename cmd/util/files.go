@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	kingpin "gopkg.in/alecthomas/kingpin.v1"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
@@ -47,7 +47,7 @@ func main() {
 	_, err := app.Parse(os.Args[1:])
 
 	if err != nil {
-		app.Usage(os.Stderr)
+		app.Usage([]string{})
 		log.Fatal(err)
 		os.Exit(1)
 	}
