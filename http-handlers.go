@@ -291,8 +291,13 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 
 }
 
+// CodetainerCreate swagger:route POST /codetainer codetainer codetainerCreate
 //
-// Create a codetainer
+// Create a new codetainer.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerBody
 //
 func RouteApiV1CodetainerCreate(ctx *Context) error {
 
@@ -321,14 +326,19 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 		return jsonError(err, ctx.W)
 	}
 
-	return renderJson(map[string]interface{}{
-		"codetainer": codetainer,
-		"error":      false,
+	return renderJson(CodetainerBody{
+		Codetainer: codetainer,
 	}, ctx.W)
 }
 
 //
+// CodetainerStart swagger:route POST /codetainer/{id}/start codetainer codetainerStart
+//
 // Start a stopped codetainer
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerBody
 //
 func RouteApiV1CodetainerStart(ctx *Context) error {
 
@@ -336,31 +346,21 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 		return jsonError(errors.New("POST only"), ctx.W)
 	}
 
-	vars := mux.Vars(ctx.R)
-	id := vars["id"]
-
-	Log.Infof("Starting codetainer: %s", id)
-	client, err := GlobalConfig.GetDockerClient()
-	if err != nil {
+	codetainer := Codetainer{}
+	ctx.R.ParseForm()
+	if err := parseObjectFromForm(&codetainer, ctx.R.PostForm); err != nil {
 		return jsonError(err, ctx.W)
-
 	}
-
-	// TODO fetch config for codetainer
-	err = client.StartContainer(id, &docker.HostConfig{
-		Binds: []string{
-			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
-		},
-	})
+	Log.Infof("Starting codetainer: %s", codetainer.Id)
+	err := codetainer.Start()
 
 	if err != nil {
 		Log.Error(err)
 		return jsonError(err, ctx.W)
 	}
 
-	return renderJson(map[string]interface{}{
-		"error":      false,
-		"codetainer": id,
+	return renderJson(CodetainerBody{
+		Codetainer: codetainer,
 	}, ctx.W)
 }
 

@@ -61,6 +61,10 @@ func (img *CodetainerImage) Register(db *Database) error {
 	return nil
 }
 
+//
+// Codetainer data structure.
+//
+// swagger:parameters codetainerCreate
 type Codetainer struct {
 	Id        string    `schema:"id" json:"id"`
 	Name      string    `schema:"name" json:"name"`
@@ -68,6 +72,32 @@ type Codetainer struct {
 	Defunct   bool      `schema"-"`
 	CreatedAt time.Time `schema:"-"`
 	UpdatedAt time.Time `schema:"-"`
+}
+
+func (codetainer *Codetainer) Start() error {
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		return err
+	}
+
+	// TODO fetch config for codetainer
+	return client.StartContainer(codetainer.Id, &docker.HostConfig{
+		Binds: []string{
+			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+		},
+	})
+}
+
+func (codetainer *Codetainer) Lookup(db *Database) error {
+	has, err := db.engine.Get(&codetainer)
+	if err != nil {
+		return err
+
+	}
+	if !has {
+		return errors.New("No codetainer found:" + codetainer.Id)
+	}
+	return nil
 }
 
 func (codetainer *Codetainer) Create(db *Database) error {
@@ -196,4 +226,12 @@ type CodetainerImageBody struct {
 // swagger:response CodetainerImageListBody
 type CodetainerImageListBody struct {
 	Images []CodetainerImage `json:"images"`
+}
+
+//
+// Codetainer response
+//
+// swagger:response CodetainerBody
+type CodetainerBody struct {
+	Codetainer `json:"codetainer"`
 }
