@@ -29,32 +29,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//
-// Return type for errors
-//
-// swagger:response APIErrorResponse
-type APIErrorResponse struct {
-	Error   bool   `json:"error" description:"set if an error is returned"`
-	Message string `json:"message" description:"error message string"`
-}
-
-//
-// TTY parameters for a codetainer
-//
-// swagger:parameters updateCurrentTTY
-type TTY struct {
-	Height int `json:"height" description:"height of tty"`
-	Width  int `json:"width" description:"width of tty"`
-}
-
-//
-// TTY response
-//
-// swagger:response TTYBody
-type TTYBody struct {
-	Tty TTY `json:"tty"`
-}
-
 func RouteIndex(ctx *Context) error {
 	return executeTemplate(ctx, "install.html", 200, map[string]interface{}{
 		"Section": "install",
