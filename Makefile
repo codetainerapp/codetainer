@@ -124,4 +124,9 @@ uninstall: clean
 
 tar: 
 
+docs: 
+	mkdir -p doc/
+	@go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	$(GOPATH)/bin/swagger generate spec > doc/swagger.json
+
 .PHONY: all clean deps

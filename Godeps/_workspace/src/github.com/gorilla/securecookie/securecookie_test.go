@@ -8,8 +8,9 @@ import (
 	"crypto/aes"
 	"crypto/hmac"
 	"crypto/sha256"
-	"errors"
+	"encoding/base64"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -23,18 +24,6 @@ var testStrings = []string{"foo", "bar", "baz"}
 
 func TestSecureCookie(t *testing.T) {
 	// TODO test too old / too new timestamps
-	compareMaps := func(m1, m2 map[string]interface{}) error {
-		if len(m1) != len(m2) {
-			return errors.New("different maps")
-		}
-		for k, v := range m1 {
-			if m2[k] != v {
-				return fmt.Errorf("Different value for key %v: expected %v, got %v", k, m2[k], v)
-			}
-		}
-		return nil
-	}
-
 	s1 := New([]byte("12345"), []byte("1234567890123456"))
 	s2 := New([]byte("54321"), []byte("6543210987654321"))
 	value := map[string]interface{}{
@@ -55,13 +44,34 @@ func TestSecureCookie(t *testing.T) {
 		if err2 != nil {
 			t.Fatalf("%v: %v", err2, encoded)
 		}
-		if err := compareMaps(dst, value); err != nil {
+		if !reflect.DeepEqual(dst, value) {
 			t.Fatalf("Expected %v, got %v.", value, dst)
 		}
 		dst2 := make(map[string]interface{})
 		err3 := s2.Decode("sid", encoded, &dst2)
 		if err3 == nil {
 			t.Fatalf("Expected failure decoding.")
+		}
+	}
+}
+
+func TestDecodeInvalid(t *testing.T) {
+	// List of invalid cookies, which must not be accepted, base64-decoded
+	// (they will be encoded before passing to Decode).
+	invalidCookies := []string{
+		"",
+		" ",
+		"\n",
+		"||",
+		"|||",
+		"cookie",
+	}
+	s := New([]byte("12345"), nil)
+	var dst string
+	for i, v := range invalidCookies {
+		err := s.Decode("name", base64.StdEncoding.EncodeToString([]byte(v)), &dst)
+		if err == nil {
+			t.Fatalf("%d: expected failure decoding", i)
 		}
 	}
 }
@@ -79,7 +89,7 @@ func TestAuthentication(t *testing.T) {
 	}
 }
 
-func TestEncription(t *testing.T) {
+func TestEncryption(t *testing.T) {
 	block, err := aes.NewCipher([]byte("1234567890123456"))
 	if err != nil {
 		t.Fatalf("Block could not be created")
@@ -99,18 +109,41 @@ func TestEncription(t *testing.T) {
 	}
 }
 
-func TestSerialization(t *testing.T) {
+func TestGobSerialization(t *testing.T) {
 	var (
+		sz           GobEncoder
 		serialized   []byte
 		deserialized map[string]string
 		err          error
 	)
 	for _, value := range testCookies {
-		if serialized, err = serialize(value); err != nil {
+		if serialized, err = sz.Serialize(value); err != nil {
 			t.Error(err)
 		} else {
 			deserialized = make(map[string]string)
-			if err = deserialize(serialized, &deserialized); err != nil {
+			if err = sz.Deserialize(serialized, &deserialized); err != nil {
+				t.Error(err)
+			}
+			if fmt.Sprintf("%v", deserialized) != fmt.Sprintf("%v", value) {
+				t.Errorf("Expected %v, got %v.", value, deserialized)
+			}
+		}
+	}
+}
+
+func TestJSONSerialization(t *testing.T) {
+	var (
+		sz           JSONEncoder
+		serialized   []byte
+		deserialized map[string]string
+		err          error
+	)
+	for _, value := range testCookies {
+		if serialized, err = sz.Serialize(value); err != nil {
+			t.Error(err)
+		} else {
+			deserialized = make(map[string]string)
+			if err = sz.Deserialize(serialized, &deserialized); err != nil {
 				t.Error(err)
 			}
 			if fmt.Sprintf("%v", deserialized) != fmt.Sprintf("%v", value) {
@@ -154,6 +187,16 @@ func TestMultiNoCodecs(t *testing.T) {
 	err = DecodeMulti("foo", "bar", &dst)
 	if err != errNoCodecs {
 		t.Errorf("DecodeMulti: bad value for error, got: %v", err)
+	}
+}
+
+func TestMissingKey(t *testing.T) {
+	s1 := New(nil, nil)
+
+	var dst []byte
+	err := s1.Decode("sid", "value", &dst)
+	if err != errHashKeyNotSet {
+		t.Fatalf("Expected %#v, got %#v", errHashKeyNotSet, err)
 	}
 }
 

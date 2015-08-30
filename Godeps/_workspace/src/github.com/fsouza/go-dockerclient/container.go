@@ -7,6 +7,7 @@ package docker
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,10 @@ import (
 	"strings"
 	"time"
 )
+
+// ErrContainerAlreadyExists is the error returned by CreateContainer when the
+// container already exists.
+var ErrContainerAlreadyExists = errors.New("container already exists")
 
 // ListContainersOptions specify parameters to the ListContainers function.
 //
@@ -192,6 +197,7 @@ type Config struct {
 	Volumes         map[string]struct{} `json:"Volumes,omitempty" yaml:"Volumes,omitempty"`
 	VolumesFrom     string              `json:"VolumesFrom,omitempty" yaml:"VolumesFrom,omitempty"`
 	WorkingDir      string              `json:"WorkingDir,omitempty" yaml:"WorkingDir,omitempty"`
+	MacAddress      string              `json:"MacAddress,omitempty" yaml:"MacAddress,omitempty"`
 	Entrypoint      []string            `json:"Entrypoint,omitempty" yaml:"Entrypoint,omitempty"`
 	NetworkDisabled bool                `json:"NetworkDisabled,omitempty" yaml:"NetworkDisabled,omitempty"`
 	SecurityOpts    []string            `json:"SecurityOpts,omitempty" yaml:"SecurityOpts,omitempty"`
@@ -203,6 +209,14 @@ type Config struct {
 type LogConfig struct {
 	Type   string            `json:"Type,omitempty" yaml:"Type,omitempty"`
 	Config map[string]string `json:"Config,omitempty" yaml:"Config,omitempty"`
+}
+
+// ULimit defines system-wide resource limitations
+// This can help a lot in system administration, e.g. when a user starts too many processes and therefore makes the system unresponsive for other users.
+type ULimit struct {
+	Name string `json:"Name,omitempty" yaml:"Name,omitempty"`
+	Soft int64  `json:"Soft,omitempty" yaml:"Soft,omitempty"`
+	Hard int64  `json:"Hard,omitempty" yaml:"Hard,omitempty"`
 }
 
 // SwarmNode containers information about which Swarm node the container is on
@@ -245,6 +259,8 @@ type Container struct {
 	VolumesRW  map[string]bool   `json:"VolumesRW,omitempty" yaml:"VolumesRW,omitempty"`
 	HostConfig *HostConfig       `json:"HostConfig,omitempty" yaml:"HostConfig,omitempty"`
 	ExecIDs    []string          `json:"ExecIDs,omitempty" yaml:"ExecIDs,omitempty"`
+
+	RestartCount int `json:"RestartCount,omitempty" yaml:"RestartCount,omitempty"`
 
 	AppArmorProfile string `json:"AppArmorProfile,omitempty" yaml:"AppArmorProfile,omitempty"`
 }
@@ -340,6 +356,9 @@ func (c *Client) CreateContainer(opts CreateContainerOptions) (*Container, error
 	if status == http.StatusNotFound {
 		return nil, ErrNoSuchImage
 	}
+	if status == http.StatusConflict {
+		return nil, ErrContainerAlreadyExists
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -425,6 +444,13 @@ type HostConfig struct {
 	ReadonlyRootfs  bool                   `json:"ReadonlyRootfs,omitempty" yaml:"ReadonlyRootfs,omitempty"`
 	SecurityOpt     []string               `json:"SecurityOpt,omitempty" yaml:"SecurityOpt,omitempty"`
 	CgroupParent    string                 `json:"CgroupParent,omitempty" yaml:"CgroupParent,omitempty"`
+	Memory          int64                  `json:"Memory,omitempty" yaml:"Memory,omitempty"`
+	MemorySwap      int64                  `json:"MemorySwap,omitempty" yaml:"MemorySwap,omitempty"`
+	CPUShares       int64                  `json:"CpuShares,omitempty" yaml:"CpuShares,omitempty"`
+	CPUSet          string                 `json:"Cpuset,omitempty" yaml:"Cpuset,omitempty"`
+	CPUQuota        int64                  `json:"CpuQuota,omitempty" yaml:"CpuQuota,omitempty"`
+	CPUPeriod       int64                  `json:"CpuPeriod,omitempty" yaml:"CpuPeriod,omitempty"`
+	Ulimits         []ULimit               `json:"Ulimits,omitempty" yaml:"Ulimits,omitempty"`
 }
 
 // StartContainer starts a container, returning an error in case of failure.
@@ -549,74 +575,93 @@ func (c *Client) TopContainer(id string, psArgs string) (TopResult, error) {
 type Stats struct {
 	Read    time.Time `json:"read,omitempty" yaml:"read,omitempty"`
 	Network struct {
-		RxDropped int64 `json:"rx_dropped,omitempty" yaml:"rx_dropped,omitempty"`
-		RxBytes   int64 `json:"rx_bytes,omitempty" yaml:"rx_bytes,omitempty"`
-		RxErrors  int64 `json:"rx_errors,omitempty" yaml:"rx_errors,omitempty"`
-		TxPackets int64 `json:"tx_packets,omitempty" yaml:"tx_packets,omitempty"`
-		TxDropped int64 `json:"tx_dropped,omitempty" yaml:"tx_dropped,omitempty"`
-		RxPackets int64 `json:"rx_packets,omitempty" yaml:"rx_packets,omitempty"`
-		TxErrors  int64 `json:"tx_errors,omitempty" yaml:"tx_errors,omitempty"`
-		TxBytes   int64 `json:"tx_bytes,omitempty" yaml:"tx_bytes,omitempty"`
+		RxDropped uint64 `json:"rx_dropped,omitempty" yaml:"rx_dropped,omitempty"`
+		RxBytes   uint64 `json:"rx_bytes,omitempty" yaml:"rx_bytes,omitempty"`
+		RxErrors  uint64 `json:"rx_errors,omitempty" yaml:"rx_errors,omitempty"`
+		TxPackets uint64 `json:"tx_packets,omitempty" yaml:"tx_packets,omitempty"`
+		TxDropped uint64 `json:"tx_dropped,omitempty" yaml:"tx_dropped,omitempty"`
+		RxPackets uint64 `json:"rx_packets,omitempty" yaml:"rx_packets,omitempty"`
+		TxErrors  uint64 `json:"tx_errors,omitempty" yaml:"tx_errors,omitempty"`
+		TxBytes   uint64 `json:"tx_bytes,omitempty" yaml:"tx_bytes,omitempty"`
 	} `json:"network,omitempty" yaml:"network,omitempty"`
 	MemoryStats struct {
 		Stats struct {
-			TotalPgmafault    int64 `json"total_pgmafault,omitempty" yaml:"total_pgmafault,omitempty"`
-			Cache             int64 `json:"cache,omitempty" yaml:"cache,omitempty"`
-			MappedFile        int64 `json:"mapped_file,omitempty" yaml:"mapped_file,omitempty"`
-			TotalInactiveFile int64 `json:"total_inactive_file,omitempty" yaml:"total_inactive_file,omitempty"`
-			Pgpgout           int64 `json:"pgpgout,omitempty" yaml:"pgpgout,omitempty"`
-			Rss               int64 `json:"rss,omitempty" yaml:"rss,omitempty"`
-			TotalMappedFile   int64 `json:"total_mapped_file,omitempty" yaml:"total_mapped_file,omitempty"`
-			Writeback         int64 `json:"writeback,omitempty" yaml:"writeback,omitempty"`
-			Unevictable       int64 `json:"unevictable,omitempty" yaml:"unevictable,omitempty"`
-			Pgpgin            int64 `json:"pgpgin,omitempty" yaml:"pgpgin,omitempty"`
-			TotalUnevictable  int64 `json:"total_unevictable,omitempty" yaml:"total_unevictable,omitempty"`
-			Pgmajfault        int64 `json:"pgmajfault,omitempty" yaml:"pgmajfault,omitempty"`
-			TotalRss          int64 `json:"total_rss,omitempty" yaml:"total_rss,omitempty"`
-			TotalRssHuge      int64 `json:"total_rss_huge,omitempty" yaml:"total_rss_huge,omitempty"`
-			TotalWriteback    int64 `json:"total_writeback,omitempty" yaml:"total_writeback,omitempty"`
-			TotalInactiveAnon int64 `json:"total_inactive_anon,omitempty" yaml:"total_inactive_anon,omitempty"`
-			RssHuge           int64 `json:"rss_huge,omitempty" yaml:"rss_huge,omitempty"`
-			// TODO(pedge): this kills the whole thing, why? commenting out for now
-			//HierarchicalMemoryLimit int64 `json:"hierarchical_memory_limit,omitempty" yaml:"hierarchical_memory_limit,omitempty"`
-			TotalPgfault    int64 `json:"total_pgfault,omitempty" yaml:"total_pgfault,omitempty"`
-			TotalActiveFile int64 `json:"total_active_file,omitempty" yaml:"total_active_file,omitempty"`
-			ActiveAnon      int64 `json:"active_anon,omitempty" yaml:"active_anon,omitempty"`
-			TotalActiveAnon int64 `json:"total_active_anon,omitempty" yaml:"total_active_anon,omitempty"`
-			TotalPgpgout    int64 `json:"total_pgpgout,omitempty" yaml:"total_pgpgout,omitempty"`
-			TotalCache      int64 `json:"total_cache,omitempty" yaml:"total_cache,omitempty"`
-			InactiveAnon    int64 `json:"inactive_anon,omitempty" yaml:"inactive_anon,omitempty"`
-			ActiveFile      int64 `json:"active_file,omitempty" yaml:"active_file,omitempty"`
-			Pgfault         int64 `json:"pgfault,omitempty" yaml:"pgfault,omitempty"`
-			InactiveFile    int64 `json:"inactive_file,omitempty" yaml:"inactive_file,omitempty"`
-			TotalPgpgin     int64 `json:"total_pgpgin,omitempty" yaml:"total_pgpgin,omitempty"`
+			TotalPgmafault          uint64 `json:"total_pgmafault,omitempty" yaml:"total_pgmafault,omitempty"`
+			Cache                   uint64 `json:"cache,omitempty" yaml:"cache,omitempty"`
+			MappedFile              uint64 `json:"mapped_file,omitempty" yaml:"mapped_file,omitempty"`
+			TotalInactiveFile       uint64 `json:"total_inactive_file,omitempty" yaml:"total_inactive_file,omitempty"`
+			Pgpgout                 uint64 `json:"pgpgout,omitempty" yaml:"pgpgout,omitempty"`
+			Rss                     uint64 `json:"rss,omitempty" yaml:"rss,omitempty"`
+			TotalMappedFile         uint64 `json:"total_mapped_file,omitempty" yaml:"total_mapped_file,omitempty"`
+			Writeback               uint64 `json:"writeback,omitempty" yaml:"writeback,omitempty"`
+			Unevictable             uint64 `json:"unevictable,omitempty" yaml:"unevictable,omitempty"`
+			Pgpgin                  uint64 `json:"pgpgin,omitempty" yaml:"pgpgin,omitempty"`
+			TotalUnevictable        uint64 `json:"total_unevictable,omitempty" yaml:"total_unevictable,omitempty"`
+			Pgmajfault              uint64 `json:"pgmajfault,omitempty" yaml:"pgmajfault,omitempty"`
+			TotalRss                uint64 `json:"total_rss,omitempty" yaml:"total_rss,omitempty"`
+			TotalRssHuge            uint64 `json:"total_rss_huge,omitempty" yaml:"total_rss_huge,omitempty"`
+			TotalWriteback          uint64 `json:"total_writeback,omitempty" yaml:"total_writeback,omitempty"`
+			TotalInactiveAnon       uint64 `json:"total_inactive_anon,omitempty" yaml:"total_inactive_anon,omitempty"`
+			RssHuge                 uint64 `json:"rss_huge,omitempty" yaml:"rss_huge,omitempty"`
+			HierarchicalMemoryLimit uint64 `json:"hierarchical_memory_limit,omitempty" yaml:"hierarchical_memory_limit,omitempty"`
+			TotalPgfault            uint64 `json:"total_pgfault,omitempty" yaml:"total_pgfault,omitempty"`
+			TotalActiveFile         uint64 `json:"total_active_file,omitempty" yaml:"total_active_file,omitempty"`
+			ActiveAnon              uint64 `json:"active_anon,omitempty" yaml:"active_anon,omitempty"`
+			TotalActiveAnon         uint64 `json:"total_active_anon,omitempty" yaml:"total_active_anon,omitempty"`
+			TotalPgpgout            uint64 `json:"total_pgpgout,omitempty" yaml:"total_pgpgout,omitempty"`
+			TotalCache              uint64 `json:"total_cache,omitempty" yaml:"total_cache,omitempty"`
+			InactiveAnon            uint64 `json:"inactive_anon,omitempty" yaml:"inactive_anon,omitempty"`
+			ActiveFile              uint64 `json:"active_file,omitempty" yaml:"active_file,omitempty"`
+			Pgfault                 uint64 `json:"pgfault,omitempty" yaml:"pgfault,omitempty"`
+			InactiveFile            uint64 `json:"inactive_file,omitempty" yaml:"inactive_file,omitempty"`
+			TotalPgpgin             uint64 `json:"total_pgpgin,omitempty" yaml:"total_pgpgin,omitempty"`
 		} `json:"stats,omitempty" yaml:"stats,omitempty"`
-		MaxUsage int64 `json:"max_usage,omitempty" yaml:"max_usage,omitempty"`
-		Usage    int64 `json:"usage,omitempty" yaml:"usage,omitempty"`
-		Failcnt  int64 `json:"failcnt,omitempty" yaml:"failcnt,omitempty"`
-		Limit    int64 `json:"limit,omitempty" yaml:"limit,omitempty"`
+		MaxUsage uint64 `json:"max_usage,omitempty" yaml:"max_usage,omitempty"`
+		Usage    uint64 `json:"usage,omitempty" yaml:"usage,omitempty"`
+		Failcnt  uint64 `json:"failcnt,omitempty" yaml:"failcnt,omitempty"`
+		Limit    uint64 `json:"limit,omitempty" yaml:"limit,omitempty"`
 	} `json:"memory_stats,omitempty" yaml:"memory_stats,omitempty"`
-	// TODO(pedge): this is in the docker docs, but no data
-	//BlkioStats string `json:"blkio_stats,omitempty" yaml:"blkio_stats,omitempty"`
+	BlkioStats struct {
+		IOServiceBytesRecursive []BlkioStatsEntry `json:"io_service_bytes_recursive,omitempty" yaml:"io_service_bytes_recursive,omitempty"`
+		IOServicedRecursive     []BlkioStatsEntry `json:"io_serviced_recursive,omitempty" yaml:"io_serviced_recursive,omitempty"`
+		IOQueueRecursive        []BlkioStatsEntry `json:"io_queue_recursive,omitempty" yaml:"io_queue_recursive,omitempty"`
+		IOServiceTimeRecursive  []BlkioStatsEntry `json:"io_service_time_recursive,omitempty" yaml:"io_service_time_recursive,omitempty"`
+		IOWaitTimeRecursive     []BlkioStatsEntry `json:"io_wait_time_recursive,omitempty" yaml:"io_wait_time_recursive,omitempty"`
+		IOMergedRecursive       []BlkioStatsEntry `json:"io_merged_recursive,omitempty" yaml:"io_merged_recursive,omitempty"`
+		IOTimeRecursive         []BlkioStatsEntry `json:"io_time_recursive,omitempty" yaml:"io_time_recursive,omitempty"`
+		SectorsRecursive        []BlkioStatsEntry `json:"sectors_recursive,omitempty" yaml:"sectors_recursive,omitempty"`
+	} `json:"blkio_stats,omitempty" yaml:"blkio_stats,omitempty"`
 	CPUStats struct {
 		CPUUsage struct {
-			PercpuUsage       []int64 `json:"percpu_usage,omitempty" yaml:"percpu_usage,omitempty"`
-			UsageInUsermode   int64   `json:"usage_in_usermode,omitempty" yaml:"usage_in_usermode,omitempty"`
-			TotalUsage        int64   `json:"total_usage,omitempty" yaml:"total_usage,omitempty"`
-			UsageInKernelmode int64   `json:"usage_in_kernelmode,omitempty" yaml:"usage_in_kernelmode,omitempty"`
+			PercpuUsage       []uint64 `json:"percpu_usage,omitempty" yaml:"percpu_usage,omitempty"`
+			UsageInUsermode   uint64   `json:"usage_in_usermode,omitempty" yaml:"usage_in_usermode,omitempty"`
+			TotalUsage        uint64   `json:"total_usage,omitempty" yaml:"total_usage,omitempty"`
+			UsageInKernelmode uint64   `json:"usage_in_kernelmode,omitempty" yaml:"usage_in_kernelmode,omitempty"`
 		} `json:"cpu_usage,omitempty" yaml:"cpu_usage,omitempty"`
-		SystemCPUUsage int64 `json:"system_cpu_usage,omitempty" yaml:"system_cpu_usage,omitempty"`
-		// TODO(pedge): this is in the docker docs, but no data
-		//ThrottlingData string `json:"throttling_data,omitempty" yaml:"throttling_data,omitempty"`
+		SystemCPUUsage uint64 `json:"system_cpu_usage,omitempty" yaml:"system_cpu_usage,omitempty"`
+		ThrottlingData struct {
+			Periods          uint64 `json:"periods,omitempty"`
+			ThrottledPeriods uint64 `json:"throttled_periods,omitempty"`
+			ThrottledTime    uint64 `json:"throttled_time,omitempty"`
+		} `json:"throttling_data,omitempty" yaml:"throttling_data,omitempty"`
 	} `json:"cpu_stats,omitempty" yaml:"cpu_stats,omitempty"`
+}
+
+// BlkioStatsEntry is a stats entry for blkio_stats
+type BlkioStatsEntry struct {
+	Major uint64 `json:"major,omitempty" yaml:"major,omitempty"`
+	Minor uint64 `json:"minor,omitempty" yaml:"minor,omitempty"`
+	Op    string `json:"op,omitempty" yaml:"op,omitempty"`
+	Value uint64 `json:"value,omitempty" yaml:"value,omitempty"`
 }
 
 // StatsOptions specify parameters to the Stats function.
 //
 // See http://goo.gl/DFMiYD for more details.
 type StatsOptions struct {
-	ID    string
-	Stats chan<- *Stats
+	ID     string
+	Stats  chan<- *Stats
+	Stream bool
 }
 
 // Stats sends container statistics for the given container to the given channel.
@@ -642,9 +687,10 @@ func (c *Client) Stats(opts StatsOptions) (retErr error) {
 	}()
 
 	go func() {
-		err := c.stream("GET", fmt.Sprintf("/containers/%s/stats", opts.ID), streamOptions{
-			rawJSONStream: true,
-			stdout:        writeCloser,
+		err := c.stream("GET", fmt.Sprintf("/containers/%s/stats?stream=%v", opts.ID, opts.Stream), streamOptions{
+			rawJSONStream:  true,
+			useJSONDecoder: true,
+			stdout:         writeCloser,
 		})
 		if err != nil {
 			dockerError, ok := err.(*Error)
@@ -758,8 +804,8 @@ func (c *Client) CopyFromContainer(opts CopyFromContainerOptions) error {
 	if err != nil {
 		return err
 	}
-	io.Copy(opts.OutputStream, bytes.NewBuffer(body))
-	return nil
+	_, err = io.Copy(opts.OutputStream, bytes.NewBuffer(body))
+	return err
 }
 
 // WaitContainer blocks until the given container stops, return the exit code

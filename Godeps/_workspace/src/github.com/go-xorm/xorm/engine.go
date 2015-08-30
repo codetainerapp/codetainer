@@ -1,3 +1,7 @@
+// Copyright 2015 The Xorm Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package xorm
 
 import (
@@ -506,6 +510,12 @@ func (engine *Engine) Distinct(columns ...string) *Session {
 	return session.Distinct(columns...)
 }
 
+func (engine *Engine) Select(str string) *Session {
+	session := engine.NewSession()
+	session.IsAutoClose = true
+	return session.Select(str)
+}
+
 // only use the paramters as select or update columns
 func (engine *Engine) Cols(columns ...string) *Session {
 	session := engine.NewSession()
@@ -541,6 +551,13 @@ func (engine *Engine) Omit(columns ...string) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
 	return session.Omit(columns...)
+}
+
+// Set null when column is zero-value and nullable for update
+func (engine *Engine) Nullable(columns ...string) *Session {
+	session := engine.NewSession()
+	session.IsAutoClose = true
+	return session.Nullable(columns...)
 }
 
 // This method will generate "column IN (?, ?)"
@@ -642,20 +659,18 @@ func (engine *Engine) Having(conditions string) *Session {
 
 func (engine *Engine) autoMapType(v reflect.Value) *core.Table {
 	t := v.Type()
-	engine.mutex.RLock()
+	engine.mutex.Lock()
 	table, ok := engine.Tables[t]
-	engine.mutex.RUnlock()
 	if !ok {
 		table = engine.mapType(v)
-		engine.mutex.Lock()
 		engine.Tables[t] = table
 		if v.CanAddr() {
 			engine.GobRegister(v.Addr().Interface())
 		} else {
 			engine.GobRegister(v.Interface())
 		}
-		engine.mutex.Unlock()
 	}
+	engine.mutex.Unlock()
 	return table
 }
 
@@ -1112,7 +1127,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 				session := engine.NewSession()
 				session.Statement.RefTable = table
 				defer session.Close()
-				isExist, err := session.Engine.dialect.IsColumnExist(table.Name, col)
+				isExist, err := session.Engine.dialect.IsColumnExist(table.Name, col.Name)
 				if err != nil {
 					return err
 				}

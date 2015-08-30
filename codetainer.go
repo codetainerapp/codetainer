@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/codetainerapp/codetainer/mlog"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
@@ -100,7 +100,7 @@ func Start() {
 		RegisterCodetainerImage(*registerImageId, *registerCommand)
 
 	default:
-		app.Usage([]string{})
+		app.Usage(os.Stdout)
 	}
 
 }

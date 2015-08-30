@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var DockerApiVersion string = "1.17"
+
 func execInContainer(client *docker.Client,
 	id string,
 	command []string) (string, string, error) {
@@ -47,8 +49,6 @@ func UrlEncoded(str string) (string, error) {
 	}
 	return u.String(), nil
 }
-
-var DockerApiVersion string = "v1.17"
 
 type ContainerConnection struct {
 	id        string
@@ -115,7 +115,7 @@ func (c *ContainerConnection) SendSingleMessage(msg string) error {
 func (c *ContainerConnection) openSocketToContainer() error {
 	id := c.id
 	endpoint := GlobalConfig.GetDockerEndpoint()
-	u, err := url.Parse(endpoint + "/" + DockerApiVersion + "/containers/" + id + "/attach/ws?logs=0&stderr=1&stdout=1&stream=1&stdin=1")
+	u, err := url.Parse(endpoint + "/v" + DockerApiVersion + "/containers/" + id + "/attach/ws?logs=0&stderr=1&stdout=1&stream=1&stdin=1")
 	if err != nil {
 		return err
 	}

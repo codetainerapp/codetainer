@@ -26,9 +26,9 @@ func jsonError(error_message error, w http.ResponseWriter) error {
 
 	Log.Error("Response error:", error_message)
 
-	return renderJson(map[string]interface{}{
-		"error":   true,
-		"message": error_message.Error(),
+	return renderJson(APIErrorResponse{
+		Error:   true,
+		Message: error_message.Error(),
 	}, w)
 }
 

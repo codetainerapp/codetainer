@@ -3,7 +3,6 @@ package codetainer
 import (
 	"errors"
 	"runtime"
-	"time"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/go-xorm/xorm"
@@ -17,21 +16,34 @@ var (
 	DefaultExecCommand string = "/bin/bash"
 )
 
-type CodetainerImage struct {
-	Id                  string `xorm:"varchar(128) not null unique"`
-	DefaultStartCommand string
-	Description         string
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	Enabled             bool
+func findDockerImageInList(id string, dockerImages []docker.APIImages) *docker.APIImages {
+	for _, img := range dockerImages {
+		if img.ID == id {
+			return &img
+		}
+		for _, tag := range img.RepoTags {
+			if tag == id {
+				return &img
+			}
+		}
+	}
+	return nil
 }
 
-type Codetainer struct {
-	Id        string
-	ImageId   string
-	Defunct   bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+func lookupImageInDocker(id string) *docker.APIImages {
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		Log.Error("Unable to fetch docker client", err)
+		return nil
+	}
+
+	opts := docker.ListImagesOptions{}
+	imgs, err := client.ListImages(opts)
+	if err != nil {
+		Log.Error("Unable to fetch image", err)
+		return nil
+	}
+	return findDockerImageInList(id, imgs)
 }
 
 type Database struct {
@@ -84,36 +96,6 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 	}
 
 	return &doneImages, nil
-}
-
-func findDockerImageInList(id string, dockerImages []docker.APIImages) *docker.APIImages {
-	for _, img := range dockerImages {
-		if img.ID == id {
-			return &img
-		}
-		for _, tag := range img.RepoTags {
-			if tag == id {
-				return &img
-			}
-		}
-	}
-	return nil
-}
-
-func lookupImageInDocker(id string) *docker.APIImages {
-	client, err := GlobalConfig.GetDockerClient()
-	if err != nil {
-		Log.Error("Unable to fetch docker client", err)
-		return nil
-	}
-
-	opts := docker.ListImagesOptions{}
-	imgs, err := client.ListImages(opts)
-	if err != nil {
-		Log.Error("Unable to fetch image", err)
-		return nil
-	}
-	return findDockerImageInList(id, imgs)
 }
 
 //

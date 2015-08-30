@@ -1,8 +1,27 @@
+// Package codetainer Codetainer API
+//
+// This API allows you to create, attach, and interact with codetainers.
+//
+//     Schemes: http, https
+//     Host: localhost
+//     BasePath: /api/v1
+//     Version: 0.0.1
+//     License: MIT http://opensource.org/licenses/MIT
+//     Contact: info@codetainer.org
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package codetainer
 
 import (
 	"bytes"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/Unknwon/com"
@@ -24,6 +43,14 @@ func RouteApiV1CodetainerTTY(ctx *Context) error {
 	}
 }
 
+// UpdateCurrentTTY swagger:route POST /codetainer/{id}/tty codetainer updateCurrentTTY
+//
+// Update the codetainer TTY height and width.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: TTYBody
+//
 func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
@@ -53,13 +80,20 @@ func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	if err != nil {
 		return jsonError(err, ctx.W)
 	}
+
+	tty := TTY{Height: height, Width: width}
 	return renderJson(map[string]interface{}{
-		"success": true,
+		"tty": tty,
 	}, ctx.W)
 }
 
+// GetCurrentTTY swagger:route GET /codetainer/{id}/tty codetainer getCurrentTTY
 //
-// Get TTY size
+// Return the codetainer TTY height and width.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: TTYBody
 //
 func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 
@@ -84,9 +118,13 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 		return jsonError(err, ctx.W)
 	}
 
+	height, _ := strconv.Atoi(lines)
+	width, _ := strconv.Atoi(col)
+
+	tty := TTY{Height: height, Width: width}
+
 	return renderJson(map[string]interface{}{
-		"col":  col,
-		"rows": lines,
+		"tty": tty,
 	}, ctx.W)
 
 }
