@@ -5,6 +5,7 @@ branches:
 git:
   path: github.com/codetainerapp/codetainer
 script:
+  - make
   - make test
 notify:
   email:
