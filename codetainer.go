@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/codetainerapp/codetainer/mlog"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
