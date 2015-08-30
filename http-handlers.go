@@ -1,3 +1,6 @@
+// @APIVersion 1.0.0
+// @APITitle Codetainer API
+// @APIDescription API for manipulating codetainer applications.
 package codetainer
 
 import (
@@ -24,6 +27,16 @@ func RouteApiV1CodetainerTTY(ctx *Context) error {
 	}
 }
 
+// @Title UpdateCodetainerTTY
+// @Description Updates the Codetainer  TTY height and width.
+// @Accept  json
+// @Param   id     			path    string  true        "codetainer ID"
+// @Param   height          form    int     false       "TTY height to resize to"
+// @Param   width           form    int     false       "TTY width to resize to"
+// @Success 200 {object} interface{}
+// @Failure 500 {object} codetainer.APIErrorResponse
+// @Resource /codetainer/
+// @Router /codetainer/{id}/tty [post]
 func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]

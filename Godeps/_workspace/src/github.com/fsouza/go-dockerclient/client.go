@@ -8,6 +8,7 @@
 package docker
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
@@ -23,6 +24,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/fsouza/go-dockerclient/vendor/github.com/docker/docker/pkg/stdcopy"
 )
 
 const userAgent = "go-dockerclient"
@@ -117,6 +120,7 @@ func (version APIVersion) compare(other APIVersion) int {
 type Client struct {
 	SkipServerVersionCheck bool
 	HTTPClient             *http.Client
+	transport              *http.Transport
 	TLSConfig              *tls.Config
 
 	endpoint            string
@@ -151,6 +155,18 @@ func NewTLSClient(endpoint string, cert, key, ca string) (*Client, error) {
 	return client, nil
 }
 
+// NewTLSClientFromBytes returns a Client instance ready for TLS communications with the givens
+// server endpoint, key and certificates (passed inline to the function as opposed to being
+// read from a local file). It will use the latest remote API version available in the server.
+func NewTLSClientFromBytes(endpoint string, certPEMBlock, keyPEMBlock, caPEMCert []byte) (*Client, error) {
+	client, err := NewVersionedTLSClientFromBytes(endpoint, certPEMBlock, keyPEMBlock, caPEMCert, "")
+	if err != nil {
+		return nil, err
+	}
+	client.SkipServerVersionCheck = true
+	return client, nil
+}
+
 // NewVersionedClient returns a Client instance ready for communication with
 // the given server endpoint, using a specific remote API version.
 func NewVersionedClient(endpoint string, apiVersionString string) (*Client, error) {
@@ -165,8 +181,11 @@ func NewVersionedClient(endpoint string, apiVersionString string) (*Client, erro
 			return nil, err
 		}
 	}
+
+	tr := &http.Transport{}
 	return &Client{
 		HTTPClient:          http.DefaultClient,
+		transport:           tr,
 		endpoint:            endpoint,
 		endpointURL:         u,
 		eventMonitor:        new(eventMonitoringState),
@@ -182,6 +201,25 @@ func NewVersionnedTLSClient(endpoint string, cert, key, ca, apiVersionString str
 // NewVersionedTLSClient returns a Client instance ready for TLS communications with the givens
 // server endpoint, key and certificates, using a specific remote API version.
 func NewVersionedTLSClient(endpoint string, cert, key, ca, apiVersionString string) (*Client, error) {
+	certPEMBlock, err := ioutil.ReadFile(cert)
+	if err != nil {
+		return nil, err
+	}
+	keyPEMBlock, err := ioutil.ReadFile(key)
+	if err != nil {
+		return nil, err
+	}
+	caPEMCert, err := ioutil.ReadFile(ca)
+	if err != nil {
+		return nil, err
+	}
+	return NewVersionedTLSClientFromBytes(endpoint, certPEMBlock, keyPEMBlock, caPEMCert, apiVersionString)
+}
+
+// NewVersionedTLSClientFromBytes returns a Client instance ready for TLS communications with the givens
+// server endpoint, key and certificates (passed inline to the function as opposed to being
+// read from a local file), using a specific remote API version.
+func NewVersionedTLSClientFromBytes(endpoint string, certPEMBlock, keyPEMBlock, caPEMCert []byte, apiVersionString string) (*Client, error) {
 	u, err := parseEndpoint(endpoint, true)
 	if err != nil {
 		return nil, err
@@ -193,23 +231,19 @@ func NewVersionedTLSClient(endpoint string, cert, key, ca, apiVersionString stri
 			return nil, err
 		}
 	}
-	if cert == "" || key == "" {
-		return nil, errors.New("Both cert and key path are required")
+	if certPEMBlock == nil || keyPEMBlock == nil {
+		return nil, errors.New("Both cert and key are required")
 	}
-	tlsCert, err := tls.LoadX509KeyPair(cert, key)
+	tlsCert, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	if err != nil {
 		return nil, err
 	}
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{tlsCert}}
-	if ca == "" {
+	if caPEMCert == nil {
 		tlsConfig.InsecureSkipVerify = true
 	} else {
-		cert, err := ioutil.ReadFile(ca)
-		if err != nil {
-			return nil, err
-		}
 		caPool := x509.NewCertPool()
-		if !caPool.AppendCertsFromPEM(cert) {
+		if !caPool.AppendCertsFromPEM(caPEMCert) {
 			return nil, errors.New("Could not add RootCA pem")
 		}
 		tlsConfig.RootCAs = caPool
@@ -222,6 +256,7 @@ func NewVersionedTLSClient(endpoint string, cert, key, ca, apiVersionString stri
 	}
 	return &Client{
 		HTTPClient:          &http.Client{Transport: tr},
+		transport:           tr,
 		TLSConfig:           tlsConfig,
 		endpoint:            endpoint,
 		endpointURL:         u,
@@ -270,13 +305,15 @@ func (c *Client) getServerAPIVersionString() (version string, err error) {
 	if status != http.StatusOK {
 		return "", fmt.Errorf("Received unexpected status %d while trying to retrieve the server version", status)
 	}
-	var versionResponse map[string]string
+	var versionResponse map[string]interface{}
 	err = json.Unmarshal(body, &versionResponse)
 	if err != nil {
 		return "", err
 	}
-	version = versionResponse["ApiVersion"]
-	return version, nil
+	if version, ok := (versionResponse["ApiVersion"]).(string); ok {
+		return version, nil
+	}
+	return "", nil
 }
 
 type doOptions struct {
@@ -318,12 +355,12 @@ func (c *Client) do(method, path string, doOptions doOptions) ([]byte, int, erro
 			return nil, -1, err
 		}
 		defer dial.Close()
-		clientconn := httputil.NewClientConn(dial, nil)
-		resp, err = clientconn.Do(req)
+		breader := bufio.NewReader(dial)
+		err = req.Write(dial)
 		if err != nil {
 			return nil, -1, err
 		}
-		defer clientconn.Close()
+		resp, err = http.ReadResponse(breader, req)
 	} else {
 		resp, err = c.HTTPClient.Do(req)
 	}
@@ -347,6 +384,7 @@ func (c *Client) do(method, path string, doOptions doOptions) ([]byte, int, erro
 type streamOptions struct {
 	setRawTerminal bool
 	rawJSONStream  bool
+	useJSONDecoder bool
 	headers        map[string]string
 	in             io.Reader
 	stdout         io.Writer
@@ -388,19 +426,29 @@ func (c *Client) stream(method, path string, streamOptions streamOptions) error 
 		if err != nil {
 			return err
 		}
-		clientconn := httputil.NewClientConn(dial, nil)
-		resp, err = clientconn.Do(req)
-		defer clientconn.Close()
-	} else {
-		resp, err = c.HTTPClient.Do(req)
-	}
-	if err != nil {
-		if strings.Contains(err.Error(), "connection refused") {
-			return ErrConnectionRefused
+		defer dial.Close()
+		breader := bufio.NewReader(dial)
+		err = req.Write(dial)
+		if err != nil {
+			return err
 		}
-		return err
+		if resp, err = http.ReadResponse(breader, req); err != nil {
+			if strings.Contains(err.Error(), "connection refused") {
+				return ErrConnectionRefused
+			}
+			return err
+		}
+		defer resp.Body.Close()
+	} else {
+		if resp, err = c.HTTPClient.Do(req); err != nil {
+			if strings.Contains(err.Error(), "connection refused") {
+				return ErrConnectionRefused
+			}
+			return err
+		}
+		defer resp.Body.Close()
+		defer c.transport.CancelRequest(req)
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -408,7 +456,7 @@ func (c *Client) stream(method, path string, streamOptions streamOptions) error 
 		}
 		return newError(resp.StatusCode, body)
 	}
-	if resp.Header.Get("Content-Type") == "application/json" {
+	if streamOptions.useJSONDecoder || resp.Header.Get("Content-Type") == "application/json" {
 		// if we want to get raw json stream, just copy it back to output
 		// without decoding it
 		if streamOptions.rawJSONStream {
@@ -438,7 +486,7 @@ func (c *Client) stream(method, path string, streamOptions streamOptions) error 
 		if streamOptions.setRawTerminal {
 			_, err = io.Copy(streamOptions.stdout, resp.Body)
 		} else {
-			_, err = stdCopy(streamOptions.stdout, streamOptions.stderr, resp.Body)
+			_, err = stdcopy.StdCopy(streamOptions.stdout, streamOptions.stderr, resp.Body)
 		}
 		return err
 	}
@@ -509,30 +557,37 @@ func (c *Client) hijack(method, path string, hijackOptions hijackOptions) error 
 	}
 	rwc, br := clientconn.Hijack()
 	defer rwc.Close()
-	errs := make(chan error, 2)
+	errChanOut := make(chan error, 1)
+	errChanIn := make(chan error, 1)
 	exit := make(chan bool)
 	go func() {
 		defer close(exit)
+		defer close(errChanOut)
 		var err error
 		if hijackOptions.setRawTerminal {
 			// When TTY is ON, use regular copy
 			_, err = io.Copy(hijackOptions.stdout, br)
 		} else {
-			_, err = stdCopy(hijackOptions.stdout, hijackOptions.stderr, br)
+			_, err = stdcopy.StdCopy(hijackOptions.stdout, hijackOptions.stderr, br)
 		}
-		errs <- err
+		errChanOut <- err
 	}()
 	go func() {
 		if hijackOptions.in != nil {
 			_, err := io.Copy(rwc, hijackOptions.in)
-			errs <- err
+			errChanIn <- err
 		}
 		rwc.(interface {
 			CloseWrite() error
 		}).CloseWrite()
 	}()
 	<-exit
-	return <-errs
+	select {
+	case err = <-errChanIn:
+		return err
+	case err = <-errChanOut:
+		return err
+	}
 }
 
 func (c *Client) getURL(path string) string {
@@ -644,28 +699,10 @@ func parseEndpoint(endpoint string, tls bool) (*url.URL, error) {
 	if tls {
 		u.Scheme = "https"
 	}
-	if u.Scheme == "tcp" {
-		_, port, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			if e, ok := err.(*net.AddrError); ok {
-				if e.Err == "missing port in address" {
-					return u, nil
-				}
-			}
-			return nil, ErrInvalidEndpoint
-		}
-
-		number, err := strconv.ParseInt(port, 10, 64)
-		if err == nil && number == 2376 {
-			u.Scheme = "https"
-		} else {
-			u.Scheme = "http"
-		}
-	}
-	if u.Scheme != "http" && u.Scheme != "https" && u.Scheme != "unix" {
-		return nil, ErrInvalidEndpoint
-	}
-	if u.Scheme != "unix" {
+	switch u.Scheme {
+	case "unix":
+		return u, nil
+	case "http", "https", "tcp":
 		_, port, err := net.SplitHostPort(u.Host)
 		if err != nil {
 			if e, ok := err.(*net.AddrError); ok {
@@ -677,10 +714,17 @@ func parseEndpoint(endpoint string, tls bool) (*url.URL, error) {
 		}
 		number, err := strconv.ParseInt(port, 10, 64)
 		if err == nil && number > 0 && number < 65536 {
+			if u.Scheme == "tcp" {
+				if number == 2376 {
+					u.Scheme = "https"
+				} else {
+					u.Scheme = "http"
+				}
+			}
 			return u, nil
 		}
-	} else {
-		return u, nil // we don't need port when using a unix socket
+		return nil, ErrInvalidEndpoint
+	default:
+		return nil, ErrInvalidEndpoint
 	}
-	return nil, ErrInvalidEndpoint
 }

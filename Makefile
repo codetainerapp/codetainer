@@ -124,4 +124,10 @@ uninstall: clean
 
 tar: 
 
+docs: 
+	@go get github.com/yvasiyarov/swagger
+	#$(GOPATH)/bin/swagger -apiPackage="github.com/codetainerapp/codetainer" -mainApiFile="github.com/codetainerapp/codetainer/http-handlers.go"
+	swagger -apiPackage="codetainer" -mainApiFile="./http-handlers.go"
+	
+
 .PHONY: all clean deps

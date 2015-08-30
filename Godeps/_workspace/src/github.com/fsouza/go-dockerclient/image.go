@@ -42,6 +42,7 @@ type Image struct {
 	Config          *Config   `json:"Config,omitempty" yaml:"Config,omitempty"`
 	Architecture    string    `json:"Architecture,omitempty" yaml:"Architecture,omitempty"`
 	Size            int64     `json:"Size,omitempty" yaml:"Size,omitempty"`
+	VirtualSize     int64     `json:"VirtualSize,omitempty" yaml:"VirtualSize,omitempty"`
 }
 
 // ImageHistory represent a layer in an image's history returned by the
@@ -104,7 +105,6 @@ var (
 //
 // See http://goo.gl/HRVN1Z for more details.
 func (c *Client) ListImages(opts ListImagesOptions) ([]APIImages, error) {
-	// TODO(pedge): what happens if we specify the digest parameter when using API Version <1.18?
 	path := "/images/json?" + queryString(opts)
 	body, _, err := c.do("GET", path, doOptions{})
 	if err != nil {
@@ -240,13 +240,17 @@ func (c *Client) PushImage(opts PushImageOptions, auth AuthConfiguration) error 
 	if opts.Name == "" {
 		return ErrNoSuchImage
 	}
+	headers, err := headersWithAuth(auth)
+	if err != nil {
+		return err
+	}
 	name := opts.Name
 	opts.Name = ""
 	path := "/images/" + name + "/push?" + queryString(&opts)
 	return c.stream("POST", path, streamOptions{
 		setRawTerminal: true,
 		rawJSONStream:  opts.RawJSONStream,
-		headers:        headersWithAuth(auth),
+		headers:        headers,
 		stdout:         opts.OutputStream,
 	})
 }
@@ -271,7 +275,10 @@ func (c *Client) PullImage(opts PullImageOptions, auth AuthConfiguration) error 
 		return ErrNoSuchImage
 	}
 
-	headers := headersWithAuth(auth)
+	headers, err := headersWithAuth(auth)
+	if err != nil {
+		return err
+	}
 	return c.createImage(queryString(&opts), headers, nil, opts.OutputStream, opts.RawJSONStream)
 }
 
@@ -351,8 +358,9 @@ type ImportImageOptions struct {
 	Source     string `qs:"fromSrc"`
 	Tag        string `qs:"tag"`
 
-	InputStream  io.Reader `qs:"-"`
-	OutputStream io.Writer `qs:"-"`
+	InputStream   io.Reader `qs:"-"`
+	OutputStream  io.Writer `qs:"-"`
+	RawJSONStream bool      `qs:"-"`
 }
 
 // ImportImage imports an image from a url, a file or stdin
@@ -374,7 +382,7 @@ func (c *Client) ImportImage(opts ImportImageOptions) error {
 		opts.InputStream = bytes.NewBuffer(b)
 		opts.Source = "-"
 	}
-	return c.createImage(queryString(&opts), nil, opts.InputStream, opts.OutputStream, false)
+	return c.createImage(queryString(&opts), nil, opts.InputStream, opts.OutputStream, opts.RawJSONStream)
 }
 
 // BuildImageOptions present the set of informations available for building an
@@ -411,7 +419,10 @@ func (c *Client) BuildImage(opts BuildImageOptions) error {
 	if opts.OutputStream == nil {
 		return ErrMissingOutputStream
 	}
-	var headers = headersWithAuth(opts.Auth, opts.AuthConfigs)
+	headers, err := headersWithAuth(opts.Auth, opts.AuthConfigs)
+	if err != nil {
+		return err
+	}
 
 	if opts.Remote != "" && opts.Name == "" {
 		opts.Name = opts.Remote
@@ -426,7 +437,7 @@ func (c *Client) BuildImage(opts BuildImageOptions) error {
 			return ErrMultipleContexts
 		}
 		var err error
-		if opts.InputStream, err = createTarStream(opts.ContextDir); err != nil {
+		if opts.InputStream, err = createTarStream(opts.ContextDir, opts.Dockerfile); err != nil {
 			return err
 		}
 	}
@@ -474,23 +485,27 @@ func isURL(u string) bool {
 	return p.Scheme == "http" || p.Scheme == "https"
 }
 
-func headersWithAuth(auths ...interface{}) map[string]string {
+func headersWithAuth(auths ...interface{}) (map[string]string, error) {
 	var headers = make(map[string]string)
 
 	for _, auth := range auths {
 		switch auth.(type) {
 		case AuthConfiguration:
 			var buf bytes.Buffer
-			json.NewEncoder(&buf).Encode(auth)
+			if err := json.NewEncoder(&buf).Encode(auth); err != nil {
+				return nil, err
+			}
 			headers["X-Registry-Auth"] = base64.URLEncoding.EncodeToString(buf.Bytes())
 		case AuthConfigurations:
 			var buf bytes.Buffer
-			json.NewEncoder(&buf).Encode(auth)
+			if err := json.NewEncoder(&buf).Encode(auth); err != nil {
+				return nil, err
+			}
 			headers["X-Registry-Config"] = base64.URLEncoding.EncodeToString(buf.Bytes())
 		}
 	}
 
-	return headers
+	return headers, nil
 }
 
 // APIImageSearch reflect the result of a search on the dockerHub

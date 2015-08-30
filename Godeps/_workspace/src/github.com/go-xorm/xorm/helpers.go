@@ -1,3 +1,7 @@
+// Copyright 2015 The Xorm Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package xorm
 
 import (
@@ -33,8 +37,16 @@ func isZero(k interface{}) bool {
 		return k.(uint32) == 0
 	case uint64:
 		return k.(uint64) == 0
+	case float32:
+		return k.(float32) == 0
+	case float64:
+		return k.(float64) == 0
+	case bool:
+		return k.(bool) == false
 	case string:
 		return k.(string) == ""
+	case time.Time:
+		return k.(time.Time).IsZero()
 	}
 	return false
 }
@@ -129,8 +141,8 @@ func reflect2value(rawValue *reflect.Value) (str string, err error) {
 		}
 	//时间类型
 	case reflect.Struct:
-		if aa == core.TimeType {
-			str = rawValue.Interface().(time.Time).Format(time.RFC3339Nano)
+		if aa.ConvertibleTo(core.TimeType) {
+			str = vv.Convert(core.TimeType).Interface().(time.Time).Format(time.RFC3339Nano)
 		} else {
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
@@ -349,6 +361,14 @@ func genCols(table *core.Table, session *Session, bean interface{}, useCol bool,
 		if session.Statement.OmitStr != "" {
 			if _, ok := session.Statement.columnMap[lColName]; ok {
 				continue
+			}
+		}
+
+		// !evalphobia! set fieldValue as nil when column is nullable and zero-value
+		if _, ok := session.Statement.nullableMap[lColName]; ok {
+			if col.Nullable && isZero(fieldValue.Interface()) {
+				var nilValue *int
+				fieldValue = reflect.ValueOf(nilValue)
 			}
 		}
 

@@ -1,3 +1,7 @@
+// Copyright 2015 The Xorm Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package xorm
 
 import (
@@ -661,8 +665,8 @@ func (db *oracle) MustDropTable(tableName string) error {
 		" AND column_name = ?", args
 }*/
 
-func (db *oracle) IsColumnExist(tableName string, col *core.Column) (bool, error) {
-	args := []interface{}{tableName, col.Name}
+func (db *oracle) IsColumnExist(tableName, colName string) (bool, error) {
+	args := []interface{}{tableName, colName}
 	query := "SELECT column_name FROM USER_TAB_COLUMNS WHERE table_name = :1" +
 		" AND column_name = :2"
 	rows, err := db.DB().Query(query, args...)
