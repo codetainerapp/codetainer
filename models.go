@@ -10,6 +10,7 @@ type CodetainerImage struct {
 	Id                  string `xorm:"varchar(128) not null unique" json:"id"`
 	DefaultStartCommand string
 	Description         string
+	Tags                []string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	Enabled             bool

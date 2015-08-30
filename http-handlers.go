@@ -238,6 +238,7 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	name := ctx.R.FormValue("name")
 
 	Log.Infof("Creating codetainer from image: %s", imageId)
+
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return jsonError(err, ctx.W)
