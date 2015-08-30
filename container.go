@@ -1,12 +1,44 @@
 package codetainer
 
 import (
+	"bytes"
 	"net"
 	"net/http"
 	"net/url"
 
+	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/websocket"
 )
+
+func execInContainer(client *docker.Client,
+	id string,
+	command []string) (string, string, error) {
+
+	exec, err := client.CreateExec(docker.CreateExecOptions{
+		AttachStderr: true,
+		AttachStdin:  false,
+		AttachStdout: true,
+		Tty:          false,
+		Cmd:          command,
+		Container:    id,
+	})
+
+	if err != nil {
+		return "", "", err
+	}
+
+	var outputBytes []byte
+	outputWriter := bytes.NewBuffer(outputBytes)
+	var errorBytes []byte
+	errorWriter := bytes.NewBuffer(errorBytes)
+
+	err = client.StartExec(exec.ID, docker.StartExecOptions{
+		OutputStream: outputWriter,
+		ErrorStream:  errorWriter,
+	})
+
+	return outputWriter.String(), errorWriter.String(), err
+}
 
 func UrlEncoded(str string) (string, error) {
 	u, err := url.Parse(str)

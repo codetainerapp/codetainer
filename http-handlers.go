@@ -16,36 +16,6 @@ func RouteIndex(ctx *Context) error {
 	})
 }
 
-func execInContainer(client *docker.Client,
-	id string,
-	command []string) (string, string, error) {
-
-	exec, err := client.CreateExec(docker.CreateExecOptions{
-		AttachStderr: true,
-		AttachStdin:  false,
-		AttachStdout: true,
-		Tty:          false,
-		Cmd:          command,
-		Container:    id,
-	})
-
-	if err != nil {
-		return "", "", err
-	}
-
-	var outputBytes []byte
-	outputWriter := bytes.NewBuffer(outputBytes)
-	var errorBytes []byte
-	errorWriter := bytes.NewBuffer(errorBytes)
-
-	err = client.StartExec(exec.ID, docker.StartExecOptions{
-		OutputStream: outputWriter,
-		ErrorStream:  errorWriter,
-	})
-
-	return outputWriter.String(), errorWriter.String(), err
-}
-
 func RouteApiV1CodetainerTTY(ctx *Context) error {
 	if ctx.R.Method == "POST" {
 		return RouteApiV1CodetainerUpdateCurrentTTY(ctx)
@@ -58,30 +28,30 @@ func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 	if id == "" {
-		return errors.New("id is required")
+		return jsonError(errors.New("id is required"), ctx.W)
 	}
 
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	height := com.StrTo(ctx.R.FormValue("height")).MustInt()
 
 	if height == 0 {
-		return errors.New("height is required")
+		return jsonError(errors.New("height is required"), ctx.W)
 	}
 
 	width := com.StrTo(ctx.R.FormValue("width")).MustInt()
 
 	if width == 0 {
-		return errors.New("width is required")
+		return jsonError(errors.New("width is required"), ctx.W)
 	}
 
 	err = client.ResizeContainerTTY(id, height, width)
 
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 	return renderJson(map[string]interface{}{
 		"success": true,
@@ -96,22 +66,22 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 	if id == "" {
-		return errors.New("id is required")
+		return jsonError(errors.New("id is required"), ctx.W)
 	}
 
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 	col, _, err := execInContainer(client, id, []string{"tput", "cols"})
 	col = strings.Trim(col, "\n")
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 	lines, _, err := execInContainer(client, id, []string{"tput", "lines"})
 	lines = strings.Trim(lines, "\n")
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	return renderJson(map[string]interface{}{
@@ -127,7 +97,7 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 func RouteApiV1CodetainerStop(ctx *Context) error {
 
 	if ctx.R.Method != "POST" {
-		return errors.New("POST only")
+		return jsonError(errors.New("POST only"), ctx.W)
 	}
 
 	vars := mux.Vars(ctx.R)
@@ -135,13 +105,13 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	err = client.StopContainer(id, 30)
 
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	return nil
@@ -165,17 +135,17 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 	if id == "" {
-		return errors.New("id is required")
+		return jsonError(errors.New("id is required"), ctx.W)
 	}
 
 	path := ctx.R.FormValue("path")
 	if path == "" {
-		return errors.New("path is required")
+		return jsonError(errors.New("path is required"), ctx.W)
 	}
 
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	exec, err := client.CreateExec(docker.CreateExecOptions{
@@ -188,7 +158,7 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 	})
 
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	var outputBytes []byte
@@ -202,12 +172,13 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 	})
 
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	files, err := makeShortFiles(outputWriter.Bytes())
+
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	return renderJson(map[string]interface{}{
@@ -223,29 +194,29 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 func RouteApiV1CodetainerCreate(ctx *Context) error {
 
 	if ctx.R.Method != "POST" {
-		return errors.New("POST only")
+		return jsonError(errors.New("POST only"), ctx.W)
 	}
-
 	imageId := ctx.R.FormValue("image-id")
 	name := ctx.R.FormValue("name")
 
 	Log.Infof("Creating codetainer from image: %s", imageId)
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	db, err := GlobalConfig.GetDatabase()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	image, err := db.LookupCodetainerImage(imageId)
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 	if image == nil {
-		return errors.New("no image found")
+		return jsonError(errors.New("no image found"), ctx.W)
 	}
 
 	// TODO: all the other configs
@@ -265,7 +236,8 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 
 	if err != nil {
 		Log.Error("unable to create container: "+name, err)
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 
 	// TODO fetch config for codetainer
@@ -277,19 +249,20 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 
 	if err != nil {
 		Log.Error(err)
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 
 	codetainer, err := db.SaveCodetainer(c.ID, imageId)
 
 	if err != nil {
 		Log.Error(err)
-		return err
+		return jsonError(err, ctx.W)
 	}
 
 	return renderJson(map[string]interface{}{
 		"codetainer": codetainer,
-		"error":      "",
+		"error":      false,
 	}, ctx.W)
 }
 
@@ -299,7 +272,7 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 func RouteApiV1CodetainerStart(ctx *Context) error {
 
 	if ctx.R.Method != "POST" {
-		return errors.New("POST only")
+		return jsonError(errors.New("POST only"), ctx.W)
 	}
 
 	vars := mux.Vars(ctx.R)
@@ -308,7 +281,8 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	Log.Infof("Starting codetainer: %s", id)
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 
 	// TODO fetch config for codetainer
@@ -320,10 +294,13 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 
 	if err != nil {
 		Log.Error(err)
-		return err
+		return jsonError(err, ctx.W)
 	}
 
-	return nil
+	return renderJson(map[string]interface{}{
+		"error":      false,
+		"codetainer": id,
+	}, ctx.W)
 }
 
 func RouteApiV1Codetainer(ctx *Context) error {
@@ -340,12 +317,14 @@ func RouteApiV1Codetainer(ctx *Context) error {
 func RouteApiV1CodetainerList(ctx *Context) error {
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 	containers, err := client.ListContainers(docker.ListContainersOptions{})
 
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 	return renderJson(map[string]interface{}{
 		"containers": containers,
@@ -359,13 +338,13 @@ func RouteApiV1CodetainerSend(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 
 	if ctx.R.Method != "POST" {
-		return errors.New("POST only")
+		return jsonError(errors.New("POST only"), ctx.W)
 	}
 
 	id := vars["id"]
 
 	if id == "" {
-		return errors.New("ID of container must be provided")
+		return jsonError(errors.New("ID of container must be provided"), ctx.W)
 	}
 
 	cmd := ctx.R.FormValue("command")
@@ -376,7 +355,13 @@ func RouteApiV1CodetainerSend(ctx *Context) error {
 
 	err := connection.SendSingleMessage(cmd + "\n")
 
-	return err
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	return renderJson(map[string]interface{}{
+		"success": true,
+	}, ctx.W)
 }
 
 //
@@ -387,18 +372,24 @@ func RouteApiV1CodetainerAttach(ctx *Context) error {
 	id := vars["id"]
 
 	if id == "" {
-		return errors.New("ID of container must be provided")
+		return jsonError(errors.New("ID of container must be provided"), ctx.W)
 	}
 
 	if ctx.WS == nil {
-		return errors.New("No websocket connection for web client: " + ctx.R.URL.String())
+		return jsonError(errors.New("No websocket connection for web client: "+ctx.R.URL.String()), ctx.W)
 	}
 
 	connection := &ContainerConnection{id: id, web: ctx.WS}
 
 	err := connection.Start()
 
-	return err
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	return renderJson(map[string]interface{}{
+		"success": true,
+	}, ctx.W)
 }
 
 //
@@ -425,11 +416,13 @@ func RouteApiV1CodetainerView(ctx *Context) error {
 func RouteApiV1CodetainerListImages(ctx *Context) error {
 	db, err := GlobalConfig.GetDatabase()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 	images, err := db.ListCodetainerImages()
 	if err != nil {
-		return err
+		return jsonError(err, ctx.W)
+
 	}
 
 	return renderJson(map[string]interface{}{
