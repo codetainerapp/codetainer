@@ -95,7 +95,7 @@ func RouteApiV1CodetainerImageCreate(ctx *Context) error {
 
 	img := CodetainerImage{}
 	ctx.R.ParseForm()
-	if err := img.Parse(ctx.R.PostForm); err != nil {
+	if err := parseObjectFromForm(&img, ctx.R.PostForm); err != nil {
 		return jsonError(err, ctx.W)
 	}
 
@@ -299,65 +299,22 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	if ctx.R.Method != "POST" {
 		return jsonError(errors.New("POST only"), ctx.W)
 	}
-	imageId := ctx.R.FormValue("image-id")
-	name := ctx.R.FormValue("name")
 
-	Log.Infof("Creating codetainer from image: %s", imageId)
-
-	client, err := GlobalConfig.GetDockerClient()
-	if err != nil {
+	codetainer := Codetainer{}
+	ctx.R.ParseForm()
+	if err := parseObjectFromForm(&codetainer, ctx.R.PostForm); err != nil {
 		return jsonError(err, ctx.W)
 	}
+	codetainer.Id = ""
+
+	Log.Infof("Creating codetainer from image: %s", codetainer.ImageId)
 
 	db, err := GlobalConfig.GetDatabase()
 	if err != nil {
 		return jsonError(err, ctx.W)
 	}
 
-	image, err := db.LookupCodetainerImage(imageId)
-	if err != nil {
-		return jsonError(err, ctx.W)
-
-	}
-	if image == nil {
-		return jsonError(errors.New("no image found"), ctx.W)
-	}
-
-	// TODO: all the other configs
-	c, err := client.CreateContainer(docker.CreateContainerOptions{
-		Name: name,
-		Config: &docker.Config{
-			OpenStdin: true,
-			Tty:       true,
-			Image:     image.Id,
-		},
-		HostConfig: &docker.HostConfig{
-			Binds: []string{
-				GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
-			},
-		},
-	})
-
-	if err != nil {
-		Log.Error("unable to create container: "+name, err)
-		return jsonError(err, ctx.W)
-
-	}
-
-	// TODO fetch config for codetainer
-	err = client.StartContainer(c.ID, &docker.HostConfig{
-		Binds: []string{
-			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
-		},
-	})
-
-	if err != nil {
-		Log.Error(err)
-		return jsonError(err, ctx.W)
-
-	}
-
-	codetainer, err := db.SaveCodetainer(c.ID, imageId)
+	err = codetainer.Create(db)
 
 	if err != nil {
 		Log.Error(err)

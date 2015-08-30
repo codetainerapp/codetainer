@@ -35,10 +35,14 @@ var (
 
 	server = app.Command("server", "Start the Codetainer control server.")
 
-	image           = app.Command("image", "Image commands")
-	register        = image.Command("register", "Register an image for use with codetainer")
+	imageCommand    = app.Command("image", "Image commands")
+	register        = imageCommand.Command("register", "Register an image for use with codetainer")
 	registerImageId = register.Arg("image-id", "Docker image id").Required().String()
 	registerCommand = register.Arg("command", "Default command to use to start container, e.g. /bin/bash").String()
+
+	codetainerCreate        = app.Command("create", "Launch a new codetainer")
+	codetainerCreateImageId = codetainerCreate.Arg("image-id", "Docker image id").Required().String()
+	codetainerCreateName    = codetainerCreate.Arg("name", "Name of container").String()
 
 	// Log Global logger
 	Log *mlog.Logger
@@ -102,6 +106,9 @@ func Start() {
 
 	case register.FullCommand():
 		RegisterCodetainerImage(*registerImageId, *registerCommand)
+
+	case codetainerCreate.FullCommand():
+		CreateCodetainer(*codetainerCreateImageId, *codetainerCreateName)
 
 	default:
 		app.Usage([]string{})

@@ -126,15 +126,6 @@ func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
 	return nil, errors.New("No image found: " + id)
 }
 
-func (db *Database) SaveCodetainer(id string, imageId string) (*Codetainer, error) {
-	c := Codetainer{Id: id, ImageId: imageId, Defunct: false}
-	_, err := db.engine.Insert(&c)
-	if err != nil {
-		return nil, err
-	}
-	return &c, err
-}
-
 //
 // List all running codetainers
 //

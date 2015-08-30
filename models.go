@@ -7,8 +7,16 @@ import (
 	"os"
 	"time"
 
+	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/schema"
 )
+
+func parseObjectFromForm(p interface{}, form url.Values) error {
+	decoder := schema.NewDecoder()
+	// r.PostForm is a map of our POST form values
+	err := decoder.Decode(p, form)
+	return err
+}
 
 //
 // Container image.
@@ -24,12 +32,12 @@ type CodetainerImage struct {
 	Enabled             bool
 }
 
-func (img *CodetainerImage) Parse(form url.Values) error {
-	decoder := schema.NewDecoder()
-	// r.PostForm is a map of our POST form values
-	err := decoder.Decode(img, form)
-	return err
-}
+// func (img *CodetainerImage) Parse(form url.Values) error {
+// decoder := schema.NewDecoder()
+// // r.PostForm is a map of our POST form values
+// err := decoder.Decode(img, form)
+// return err
+// }
 
 func (img *CodetainerImage) Register(db *Database) error {
 	// check if image is in docker
@@ -54,11 +62,70 @@ func (img *CodetainerImage) Register(db *Database) error {
 }
 
 type Codetainer struct {
-	Id        string
-	ImageId   string
-	Defunct   bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id        string    `schema:"id" json:"id"`
+	Name      string    `schema:"name" json:"name"`
+	ImageId   string    `schema:"image-id" json:"image-id"`
+	Defunct   bool      `schema"-"`
+	CreatedAt time.Time `schema:"-"`
+	UpdatedAt time.Time `schema:"-"`
+}
+
+func (codetainer *Codetainer) Create(db *Database) error {
+	client, err := GlobalConfig.GetDockerClient()
+
+	if err != nil {
+		return err
+	}
+
+	image, err := db.LookupCodetainerImage(codetainer.ImageId)
+
+	if err != nil {
+		return err
+	}
+
+	if image == nil {
+		return errors.New("no image found")
+	}
+
+	codetainer.ImageId = image.Id
+
+	// TODO: all the other configs
+	c, err := client.CreateContainer(docker.CreateContainerOptions{
+		Name: codetainer.Name,
+		Config: &docker.Config{
+			OpenStdin: true,
+			Tty:       true,
+			Image:     image.Id,
+		},
+		HostConfig: &docker.HostConfig{
+			Binds: []string{
+				GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+			},
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// TODO fetch config for codetainer
+	err = client.StartContainer(c.ID, &docker.HostConfig{
+		Binds: []string{
+			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	codetainer.Id = c.ID
+	return codetainer.Save(db)
+}
+
+func (c *Codetainer) Save(db *Database) error {
+	_, err := db.engine.Insert(c)
+	return err
 }
 
 type ShortFileInfo struct {
