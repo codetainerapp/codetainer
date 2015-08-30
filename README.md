@@ -1,6 +1,6 @@
 # codetainer
 
-[![Build Status](https://drone.io/github.com/codetainerapp/codetainer/status.png)](https://drone.io/github.com/codetainerapp/codetainer/latest)
+[![Build Status](http://komanda.io:8080/api/badge/github.com/codetainerapp/codetainer/status.svg?branch=master)](http://komanda.io:8080/github.com/codetainerapp/codetainer)
 
 `codetainer` allows you to create code 'sandboxes' you can embed in your 
 web applications (think of it like an OSS clone of [codepicnic.com](http://codepicnic.com)).
