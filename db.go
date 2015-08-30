@@ -63,9 +63,7 @@ func NewDatabase(dbPath string) (*Database, error) {
 		return nil, err
 	}
 
-	if !fileExists(dbPath) {
-		engine.Sync(new(Codetainer), new(CodetainerImage))
-	}
+	engine.Sync(new(Codetainer), new(CodetainerImage))
 
 	db.engine = engine
 	runtime.SetFinalizer(db, CloseDb)
@@ -99,37 +97,33 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 }
 
 //
-// Register a new codetainer image.
-//
-func (db *Database) RegisterCodetainerImage(id string, command string) error {
-	// check if image is in docker
-	image := lookupImageInDocker(id)
-	if image != nil {
-		if command == "" {
-			command = DefaultExecCommand
-		}
-		image := CodetainerImage{Id: image.ID, DefaultStartCommand: command, Enabled: true}
-		_, err := db.engine.Insert(&image)
-		return err
-
-	} else {
-		return errors.New("No image found in docker.")
-	}
-	return nil
-}
-
-//
-// List all running codetainers
+// List codetainer images
 //
 func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
-	img := CodetainerImage{Id: id}
-	has, err := db.engine.Get(&img)
-
-	if has && err == nil {
-		return &img, nil
-	} else {
+	image := CodetainerImage{Id: id}
+	has, err := db.engine.Get(&image)
+	if err != nil {
 		return nil, err
 	}
+
+	if has && err == nil {
+		return &image, nil
+	}
+
+	// lookup by tag
+	imgs, err := db.ListCodetainerImages()
+	if err != nil {
+		return nil, err
+	}
+	for _, img := range *imgs {
+		for _, tag := range img.Tags {
+			if tag == id {
+				return &img, nil
+			}
+		}
+	}
+
+	return nil, errors.New("No image found: " + id)
 }
 
 func (db *Database) SaveCodetainer(id string, imageId string) (*Codetainer, error) {

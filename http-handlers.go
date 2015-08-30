@@ -42,6 +42,71 @@ func RouteApiV1CodetainerTTY(ctx *Context) error {
 		return RouteApiV1CodetainerGetCurrentTTY(ctx)
 	}
 }
+func RouteApiV1CodetainerImage(ctx *Context) error {
+	switch ctx.R.Method {
+	case "POST":
+		return RouteApiV1CodetainerImageCreate(ctx)
+	case "GET":
+		return RouteApiV1CodetainerImageList(ctx)
+	}
+
+	return errors.New(ctx.R.URL.String() + ": Unsupported method " + ctx.R.Method)
+}
+
+// ImageList swagger:route GET /image codetainer imageList
+//
+// List all codetainer images.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerImageListBody
+//
+func RouteApiV1CodetainerImageList(ctx *Context) error {
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		return jsonError(err, ctx.W)
+
+	}
+	images, err := db.ListCodetainerImages()
+	if err != nil {
+		return jsonError(err, ctx.W)
+
+	}
+
+	return renderJson(map[string]interface{}{
+		"images": images,
+	}, ctx.W)
+}
+
+// ImageCreate swagger:route POST /image codetainer imageCreate
+//
+// Register a Docker image to be used as a codetainer.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerImageBody
+//
+func RouteApiV1CodetainerImageCreate(ctx *Context) error {
+
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	img := CodetainerImage{}
+	ctx.R.ParseForm()
+	if err := img.Parse(ctx.R.PostForm); err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	err = img.Register(db)
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	return renderJson(CodetainerImageBody{Image: img}, ctx.W)
+}
 
 // UpdateCurrentTTY swagger:route POST /codetainer/{id}/tty codetainer updateCurrentTTY
 //
@@ -238,6 +303,7 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	name := ctx.R.FormValue("name")
 
 	Log.Infof("Creating codetainer from image: %s", imageId)
+
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		return jsonError(err, ctx.W)
@@ -446,24 +512,4 @@ func RouteApiV1CodetainerView(ctx *Context) error {
 		"PageIsContainerView": true,
 		"ContainerId":         id,
 	})
-}
-
-//
-// List images
-//
-func RouteApiV1CodetainerListImages(ctx *Context) error {
-	db, err := GlobalConfig.GetDatabase()
-	if err != nil {
-		return jsonError(err, ctx.W)
-
-	}
-	images, err := db.ListCodetainerImages()
-	if err != nil {
-		return jsonError(err, ctx.W)
-
-	}
-
-	return renderJson(map[string]interface{}{
-		"images": images,
-	}, ctx.W)
 }

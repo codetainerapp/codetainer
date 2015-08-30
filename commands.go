@@ -6,7 +6,9 @@ func RegisterCodetainerImage(id string, command string) {
 	if err != nil {
 		Log.Fatal(err)
 	}
-	err = db.RegisterCodetainerImage(id, command)
+
+	image := CodetainerImage{Id: id, DefaultStartCommand: command}
+	err = image.Register(db)
 
 	if err != nil {
 		Log.Fatal("Unable to register container image: ", err)
