@@ -11,16 +11,16 @@ notify:
     recipients:
       - dustin.webber@gmail.com
       - jandre@gmail.com
-publish:
-  github:
-    branch: master
-    script:
-    artifacts:
-      - release
-    tag: v$(cat .Version)
-    token: $$GITHUB_TOKEN
-    user: mephux
-    repo: codetainer
-    when: 
-      branch: master
-      pull_requests: false
+# publish:
+  # github:
+    # branch: master
+    # script:
+    # artifacts:
+      # - release
+    # tag: v$(cat .Version)
+    # token: $$GITHUB_TOKEN
+    # user: mephux
+    # repo: codetainer
+    # when: 
+      # branch: master
+      # pull_requests: false
