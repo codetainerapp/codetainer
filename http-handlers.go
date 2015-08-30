@@ -1,17 +1,59 @@
-// @APIVersion 1.0.0
-// @APITitle Codetainer API
-// @APIDescription API for manipulating codetainer applications.
+// Package codetainer Codetainer API
+//
+// This API allows you to create, attach, and interact with codetainers.
+//
+//     Schemes: http, https
+//     Host: localhost
+//     BasePath: /api/v1
+//     Version: 0.0.1
+//     License: MIT http://opensource.org/licenses/MIT
+//     Contact: info@codetainer.org
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package codetainer
 
 import (
 	"bytes"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/Unknwon/com"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/mux"
 )
+
+//
+// Return type for errors
+//
+// swagger:response APIErrorResponse
+type APIErrorResponse struct {
+	Error   bool   `json:"error" description:"set if an error is returned"`
+	Message string `json:"message" description:"error message string"`
+}
+
+//
+// TTY parameters for a codetainer
+//
+// swagger:parameters updateCurrentTTY
+type TTY struct {
+	Height int `json:"height" description:"height of tty"`
+	Width  int `json:"width" description:"width of tty"`
+}
+
+//
+// TTY response
+//
+// swagger:response TTYBody
+type TTYBody struct {
+	Tty TTY `json:"tty"`
+}
 
 func RouteIndex(ctx *Context) error {
 	return executeTemplate(ctx, "install.html", 200, map[string]interface{}{
@@ -27,16 +69,14 @@ func RouteApiV1CodetainerTTY(ctx *Context) error {
 	}
 }
 
-// @Title UpdateCodetainerTTY
-// @Description Updates the Codetainer  TTY height and width.
-// @Accept  json
-// @Param   id     			path    string  true        "codetainer ID"
-// @Param   height          form    int     false       "TTY height to resize to"
-// @Param   width           form    int     false       "TTY width to resize to"
-// @Success 200 {object} interface{}
-// @Failure 500 {object} codetainer.APIErrorResponse
-// @Resource /codetainer/
-// @Router /codetainer/{id}/tty [post]
+// UpdateCurrentTTY swagger:route POST /codetainer/{id}/tty codetainer updateCurrentTTY
+//
+// Update the codetainer TTY height and width.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: TTYBody
+//
 func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
@@ -66,13 +106,20 @@ func RouteApiV1CodetainerUpdateCurrentTTY(ctx *Context) error {
 	if err != nil {
 		return jsonError(err, ctx.W)
 	}
+
+	tty := TTY{Height: height, Width: width}
 	return renderJson(map[string]interface{}{
-		"success": true,
+		"tty": tty,
 	}, ctx.W)
 }
 
+// GetCurrentTTY swagger:route GET /codetainer/{id}/tty codetainer getCurrentTTY
 //
-// Get TTY size
+// Return the codetainer TTY height and width.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: TTYBody
 //
 func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 
@@ -97,9 +144,13 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 		return jsonError(err, ctx.W)
 	}
 
+	height, _ := strconv.Atoi(lines)
+	width, _ := strconv.Atoi(col)
+
+	tty := TTY{Height: height, Width: width}
+
 	return renderJson(map[string]interface{}{
-		"col":  col,
-		"rows": lines,
+		"tty": tty,
 	}, ctx.W)
 
 }

@@ -12,14 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-//
-// Return type for errors
-//
-type APIErrorResponse struct {
-	Error   bool   `json:"error" description:"set if an error is returned"`
-	Message string `json:"message" description:"error message string"`
-}
-
 var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 
 var funcs template.FuncMap = map[string]interface{}{
