@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/codetainerapp/codetainer",
-	"GoVersion": "go1.4",
+	"GoVersion": "go1.5",
 	"Deps": [
 		{
 			"ImportPath": "github.com/BurntSushi/toml",
@@ -8,12 +8,61 @@
 			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
 		},
 		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.6.5-2-geb84da5",
+			"Rev": "eb84da520d0bfecda7a9288107ec991b4ebcedb4"
+		},
+		{
 			"ImportPath": "github.com/Unknwon/com",
 			"Rev": "188d690b1aea28bf00ba76983aa285b1d322e3dd"
 		},
 		{
+			"ImportPath": "github.com/alecthomas/template",
+			"Rev": "b867cc6ab45cece8143cfcc6fc9c77cf3f2c23c0"
+		},
+		{
 			"ImportPath": "github.com/alecthomas/units",
 			"Rev": "6b4e7dc5e3143b85ea77909c72caf89416fc2915"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/archive",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/fileutils",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/ioutils",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/pools",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/promise",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/system",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/units",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar",
+			"Comment": "v1.4.1-1548-g95dcb27",
+			"Rev": "95dcb2748442fc1f59e8c2e010679e0aea3cef1c"
 		},
 		{
 			"ImportPath": "github.com/dustin/go-humanize",
@@ -70,9 +119,9 @@
 			"Rev": "897b8800a7d1a93518b87c00e5d1c5d7476f3701"
 		},
 		{
-			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
-			"Comment": "v1.3.7",
-			"Rev": "45f9714aa86a9624491adeaab1e9df1baf84dd38"
+			"ImportPath": "gopkg.in/alecthomas/kingpin.v2",
+			"Comment": "v2.0.11",
+			"Rev": "3eb8ffbc54a2f5e806181081e23098b67fe06d06"
 		}
 	]
 }
