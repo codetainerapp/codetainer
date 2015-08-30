@@ -142,7 +142,8 @@ Codetainer = {
 
     console.log(term.element.offsetWidth, term.element.offsetHeight)
 
-    var wsUri = "ws://127.0.0.1:3000/api/v1/codetainer/" + container + 
+    var host = location.hostname + ":" + location.port;
+    var wsUri = "ws://" + host + "/api/v1/codetainer/" + container + 
     "/attach";
 
     console.log(wsUri);

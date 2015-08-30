@@ -117,6 +117,8 @@ deb386:
 		package/root/=/
 
 install: clean all
+	mkdir -p /opt/codetainer
+	sudo cp -r ./bin/ /opt/codetainer/bin
 
 uninstall: clean
 

@@ -18,8 +18,7 @@ var (
 )
 
 type CodetainerImage struct {
-	Id                  string
-	Tags                []string
+	Id                  string `xorm:"varchar(128) not null unique"`
 	DefaultStartCommand string
 	Description         string
 	CreatedAt           time.Time
@@ -68,7 +67,7 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 	if err != nil {
 		return nil, err
 	}
-	opts := docker.ListImagesOptions{All: true}
+	opts := docker.ListImagesOptions{}
 	dockerImages, err := client.ListImages(opts)
 	err = db.engine.Find(&containerImages, &CodetainerImage{Enabled: true})
 	if err != nil {
@@ -77,7 +76,7 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 
 	// filter codetainer images by stuff in docker.
 	for _, img := range containerImages {
-		if findDockerImageInList(img.Id, dockerImages) {
+		if findDockerImageInList(img.Id, dockerImages) != nil {
 			doneImages = append(doneImages, img)
 		}
 	}
@@ -85,35 +84,34 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 	return &doneImages, nil
 }
 
-func findDockerImageInList(id string, dockerImages []docker.APIImages) bool {
+func findDockerImageInList(id string, dockerImages []docker.APIImages) *docker.APIImages {
 	for _, img := range dockerImages {
 		if img.ID == id {
-			return true
+			return &img
+		}
+		for _, tag := range img.RepoTags {
+			if tag == id {
+				return &img
+			}
 		}
 	}
-	return false
+	return nil
 }
 
-func imageExistsInDocker(id string) bool {
+func lookupImageInDocker(id string) *docker.APIImages {
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
 		Log.Error("Unable to fetch docker client", err)
-		return false
+		return nil
 	}
 
-	filter := map[string][]string{"Id": []string{id}}
-	opts := docker.ListImagesOptions{
-		Filters: filter,
-	}
+	opts := docker.ListImagesOptions{}
 	imgs, err := client.ListImages(opts)
 	if err != nil {
 		Log.Error("Unable to fetch image", err)
-		return false
+		return nil
 	}
-	if imgs == nil || len(imgs) == 0 {
-		return false
-	}
-	return true
+	return findDockerImageInList(id, imgs)
 }
 
 //
@@ -121,11 +119,12 @@ func imageExistsInDocker(id string) bool {
 //
 func (db *Database) RegisterCodetainerImage(id string, command string) error {
 	// check if image is in docker
-	if imageExistsInDocker(id) {
+	image := lookupImageInDocker(id)
+	if image != nil {
 		if command == "" {
 			command = DefaultExecCommand
 		}
-		image := CodetainerImage{Id: id, DefaultStartCommand: command}
+		image := CodetainerImage{Id: image.ID, DefaultStartCommand: command, Enabled: true}
 		_, err := db.engine.Insert(&image)
 		return err
 
@@ -133,6 +132,29 @@ func (db *Database) RegisterCodetainerImage(id string, command string) error {
 		return errors.New("No image found in docker.")
 	}
 	return nil
+}
+
+//
+// List all running codetainers
+//
+func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
+	img := CodetainerImage{Id: id}
+	has, err := db.engine.Get(&img)
+
+	if has && err == nil {
+		return &img, nil
+	} else {
+		return nil, err
+	}
+}
+
+func (db *Database) SaveCodetainer(id string, imageId string) (*Codetainer, error) {
+	c := Codetainer{Id: id, ImageId: imageId, Defunct: false}
+	_, err := db.engine.Insert(&c)
+	if err != nil {
+		return nil, err
+	}
+	return &c, err
 }
 
 //

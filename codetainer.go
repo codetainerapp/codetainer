@@ -31,6 +31,11 @@ var (
 
 	server = app.Command("server", "Start the Codetainer control server.")
 
+	image           = app.Command("image", "Image commands")
+	register        = image.Command("register", "Register an image for use with codetainer")
+	registerImageId = register.Arg("image-id", "Docker image id").Required().String()
+	registerCommand = register.Arg("command", "Default command to use to start container, e.g. /bin/bash").String()
+
 	// Log Global logger
 	Log *mlog.Logger
 
@@ -82,10 +87,17 @@ func Start() {
 		GlobalConfig = *config
 	}
 
+	if !config.TestConfig() {
+		Log.Fatal("Invalid configuration detected.")
+	}
+
 	switch kingpin.MustParse(args, perr) {
 
 	case server.FullCommand():
 		StartServer()
+
+	case register.FullCommand():
+		RegisterCodetainerImage(*registerImageId, *registerCommand)
 
 	default:
 		app.Usage([]string{})

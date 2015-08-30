@@ -46,8 +46,9 @@ func StartServer() {
 	r.Handle("/api/v1/codetainer/{id}/view", handlerFunc(RouteApiV1CodetainerView))
 	r.Handle("/api/v1/codetainer/{id}/tty", handlerFunc(RouteApiV1CodetainerTTY))
 	r.Handle("/api/v1/codetainer/{id}/files", handlerFunc(RouteApiV1CodetainerListFiles))
+	r.Handle("/api/v1/codetainer/{id}/send", handlerFunc(RouteApiV1CodetainerSend))
 	r.Handle("/api/v1/codetainer/{id}/attach", handlerFunc(RouteApiV1CodetainerAttach))
-	r.Handle("/api/v1/codetainer/", handlerFunc(RouteApiV1CodetainerList))
+	r.Handle("/api/v1/codetainer/", handlerFunc(RouteApiV1Codetainer))
 	r.Handle("/api/v1/codetainer/{id}/start", handlerFunc(RouteApiV1CodetainerStart))
 	r.Handle("/api/v1/codetainer/{id}/stop", handlerFunc(RouteApiV1CodetainerStop))
 	r.Handle("/api/v1/codetainer/images", handlerFunc(RouteApiV1CodetainerListImages))
@@ -94,7 +95,7 @@ func (f handlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(r.URL.String(), "/attach") {
 		ws, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			Log.Debug(err)
+			Log.Error("Unable to upgrade websocket connection:", err)
 		}
 	}
 
@@ -117,22 +118,6 @@ func (f handlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Log.Fatal(err)
 		}
 	}
-
-	// if !strings.Contains(r.URL.String(), "/api/") {
-	// if !KittyConfig.db.Setup {
-	// if r.URL.String() != "/install" && r.URL.String() != "/redis-test" {
-	// http.Redirect(w, r, "/install", 301)
-	// return
-	// }
-	// } else {
-	// if r.URL.String() != "/login" {
-	// if session.Values["current_user"] == nil {
-	// http.Redirect(w, r, "/login", 301)
-	// return
-	// }
-	// }
-	// }
-	// }
 	//
 
 	context := &Context{

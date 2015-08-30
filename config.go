@@ -34,13 +34,17 @@ func (c *Config) GetDatabase() (*Database, error) {
 
 func (c *Config) GetDatabasePath() string {
 
-	if c.DatabasePath != "" {
-		basePath := "/var/lib/codetainer/"
+	if c.DatabasePath == "" {
+		// basePath := "/var/lib/codetainer/"
+		basePath := "./"
 		c.DatabasePath = basePath + "codetainer.db"
 
 		if _, err := os.Stat(c.DatabasePath); err != nil {
 			if os.IsNotExist(err) {
-				os.MkdirAll("/var/lib/codetainer", 0700)
+				err := os.MkdirAll("/var/lib/codetainer", 0700)
+				if err != nil {
+					Log.Fatal("Unable to create path for database: " + basePath)
+				}
 			} else {
 				Log.Fatal(err)
 			}
@@ -59,12 +63,48 @@ func (c *Config) GetDockerClient() (*docker.Client, error) {
 	return docker.NewClient(endpoint)
 }
 
+func (c *Config) testDockerClient() error {
+	endpoint, err := c.GetDockerClient()
+	if err != nil {
+		return err
+	}
+	return endpoint.Ping()
+}
+
 func (c *Config) GetDockerEndpoint() string {
 	if c.DockerServerUseHttps {
 		return fmt.Sprintf("https://%s:%d", c.DockerServer, c.DockerPort)
 	} else {
 		return fmt.Sprintf("http://%s:%d", c.DockerServer, c.DockerPort)
 	}
+}
+
+//
+// Ensure a configuration is valid and all dependencies are installed.
+//
+func (c *Config) TestConfig() bool {
+	err := c.testDockerClient()
+	if err != nil {
+		Log.Error(`Unable to connect to Docker API.  Are you sure you have
+configured the Docker API to accept remote HTTP connections?
+
+E.g., your docker service needs to have the following parameters in the
+command line:
+
+  /usr/bin/docker -d -H tcp://127.0.0.1:4500
+
+Please also check your config.toml has the correct configuration for the DockerServer
+and DockerPort:
+
+  # Docker API server and port
+  DockerServer = "localhost"
+  DockerPort = 4500
+`)
+
+		return false
+	}
+
+	return true
 }
 
 var (
