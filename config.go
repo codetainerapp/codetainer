@@ -36,19 +36,19 @@ func (c *Config) GetDatabasePath() string {
 
 	if c.DatabasePath == "" {
 		// basePath := "/var/lib/codetainer/"
-		basePath := "./"
-		c.DatabasePath = basePath + "codetainer.db"
+		// basePath := "./"
+		c.DatabasePath = "codetainer.db"
 
-		if _, err := os.Stat(c.DatabasePath); err != nil {
-			if os.IsNotExist(err) {
-				err := os.MkdirAll("/var/lib/codetainer", 0700)
-				if err != nil {
-					Log.Fatal("Unable to create path for database: " + basePath)
-				}
-			} else {
-				Log.Fatal(err)
-			}
-		}
+		// if _, err := os.Stat(c.DatabasePath); err != nil {
+		// if os.IsNotExist(err) {
+		// err := os.MkdirAll("/var/lib/codetainer", 0700)
+		// if err != nil {
+		// Log.Fatal("Unable to create path for database: " + basePath)
+		// }
+		// } else {
+		// Log.Fatal(err)
+		// }
+		// }
 	}
 	return c.DatabasePath
 }

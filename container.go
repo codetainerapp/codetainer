@@ -48,7 +48,7 @@ func UrlEncoded(str string) (string, error) {
 	return u.String(), nil
 }
 
-var DockerApiVersion string = "v1.18"
+var DockerApiVersion string = "v1.17"
 
 type ContainerConnection struct {
 	id        string

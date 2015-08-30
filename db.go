@@ -44,7 +44,9 @@ func CloseDb(db *Database) {
 
 func NewDatabase(dbPath string) (*Database, error) {
 	db := &Database{}
+
 	engine, err := xorm.NewEngine("sqlite3", dbPath)
+
 	if err != nil {
 		return nil, err
 	}
