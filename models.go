@@ -2,18 +2,55 @@ package codetainer
 
 import (
 	"encoding/json"
+	"errors"
+	"net/url"
 	"os"
 	"time"
+
+	"github.com/gorilla/schema"
 )
 
+//
+// Container image.
+//
+// swagger:parameters imageCreate
 type CodetainerImage struct {
-	Id                  string `xorm:"varchar(128) not null unique" json:"id"`
-	DefaultStartCommand string
-	Description         string
-	Tags                []string
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
+	Id                  string    `xorm:"varchar(128) not null unique" json:"id" schema:"id"`
+	DefaultStartCommand string    `json:"command" schema:"command"`
+	Description         string    `json:"description" schema:"description"`
+	Tags                []string  `schema:"-"`
+	CreatedAt           time.Time `schema:"-"`
+	UpdatedAt           time.Time `schema:"-"`
 	Enabled             bool
+}
+
+func (img *CodetainerImage) Parse(form url.Values) error {
+	decoder := schema.NewDecoder()
+	// r.PostForm is a map of our POST form values
+	err := decoder.Decode(img, form)
+	return err
+}
+
+func (img *CodetainerImage) Register(db *Database) error {
+	// check if image is in docker
+	image := lookupImageInDocker(img.Id)
+
+	if image != nil {
+		if img.DefaultStartCommand == "" {
+			img.DefaultStartCommand = DefaultExecCommand
+		}
+		img.Tags = image.RepoTags
+		img.Enabled = true
+
+		Log.Info("Registering New Image: ", img)
+		_, err := db.engine.Insert(img)
+		return err
+
+	} else {
+		return errors.New("No image found in docker: " + img.Id)
+	}
+
+	return nil
 }
 
 type Codetainer struct {
@@ -76,4 +113,20 @@ type TTY struct {
 // swagger:response TTYBody
 type TTYBody struct {
 	Tty TTY `json:"tty"`
+}
+
+//
+// CodetainerImage response
+//
+// swagger:response CodetainerImageBody
+type CodetainerImageBody struct {
+	Image CodetainerImage `json:"image"`
+}
+
+//
+// CodetainerImageList response
+//
+// swagger:response CodetainerImageListBody
+type CodetainerImageListBody struct {
+	Images []CodetainerImage `json:"images"`
 }

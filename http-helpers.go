@@ -24,7 +24,7 @@ var funcs template.FuncMap = map[string]interface{}{
 func jsonError(error_message error, w http.ResponseWriter) error {
 	w.WriteHeader(500)
 
-	Log.Error("Response error:", error_message)
+	Log.Error("Response error: ", error_message)
 
 	return renderJson(APIErrorResponse{
 		Error:   true,

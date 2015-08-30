@@ -97,27 +97,6 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 }
 
 //
-// Register a new codetainer image.
-//
-func (db *Database) RegisterCodetainerImage(id string, command string) error {
-	// check if image is in docker
-	image := lookupImageInDocker(id)
-
-	if image != nil {
-		if command == "" {
-			command = DefaultExecCommand
-		}
-		image := CodetainerImage{Id: image.ID, Tags: image.RepoTags, DefaultStartCommand: command, Enabled: true}
-		_, err := db.engine.Insert(&image)
-		return err
-
-	} else {
-		return errors.New("No image found in docker.")
-	}
-	return nil
-}
-
-//
 // List codetainer images
 //
 func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
@@ -139,7 +118,7 @@ func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
 	for _, img := range *imgs {
 		for _, tag := range img.Tags {
 			if tag == id {
-				return &img.tags, nil
+				return &img, nil
 			}
 		}
 	}
