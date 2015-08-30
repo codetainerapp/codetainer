@@ -57,6 +57,10 @@
 			"Rev": "a3ec486e6a7a41858210b0fc5d7b5df593b3c4a3"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/go-version",
+			"Rev": "999359b6b7a041ce16e695d51e92145b83f01087"
+		},
+		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
 			"Comment": "v1.0.0-9-g897b880",
 			"Rev": "897b8800a7d1a93518b87c00e5d1c5d7476f3701"

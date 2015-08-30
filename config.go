@@ -1,9 +1,12 @@
 package codetainer
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	version "github.com/hashicorp/go-version"
 
 	"github.com/BurntSushi/toml"
 	docker "github.com/fsouza/go-dockerclient"
@@ -71,6 +74,25 @@ func (c *Config) testDockerClient() error {
 	return endpoint.Ping()
 }
 
+func (c *Config) testDockerVersion() error {
+	endpoint, err := c.GetDockerClient()
+	if err != nil {
+		return err
+	}
+	ev, err := endpoint.Version()
+	if err != nil {
+
+		return err
+	}
+	currVersion := ev.Get("ApiVersion")
+	activeVersion, err := version.NewVersion(currVersion)
+	supportedVersion, err := version.NewVersion(DockerApiVersion)
+	if activeVersion.LessThan(supportedVersion) {
+		return errors.New(currVersion + " version is lower than supported Docker version of " + DockerApiVersion + ". You will need to upgrade docker.")
+	}
+	return nil
+}
+
 func (c *Config) GetDockerEndpoint() string {
 	if c.DockerServerUseHttps {
 		return fmt.Sprintf("https://%s:%d", c.DockerServer, c.DockerPort)
@@ -85,7 +107,7 @@ func (c *Config) GetDockerEndpoint() string {
 func (c *Config) TestConfig() bool {
 	err := c.testDockerClient()
 	if err != nil {
-		Log.Error(`Unable to connect to Docker API.  Are you sure you have
+		Log.Fatal(`Unable to connect to Docker API.  Are you sure you have
 configured the Docker API to accept remote HTTP connections?
 
 E.g., your docker service needs to have the following parameters in the
@@ -101,7 +123,10 @@ and DockerPort:
   DockerPort = 4500
 `)
 
-		return false
+	}
+	err = c.testDockerVersion()
+	if err != nil {
+		Log.Fatal(err)
 	}
 
 	return true
