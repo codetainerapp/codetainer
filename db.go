@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	docker "github.com/fsouza/go-dockerclient"
+	core "github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -59,6 +60,8 @@ func NewDatabase(dbPath string) (*Database, error) {
 
 	engine, err := xorm.NewEngine("sqlite3", dbPath)
 
+	engine.Logger.SetLevel(core.LOG_WARNING)
+
 	if err != nil {
 		return nil, err
 	}
@@ -79,8 +82,14 @@ func (db *Database) ListCodetainerImages() (*[]CodetainerImage, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	opts := docker.ListImagesOptions{}
 	dockerImages, err := client.ListImages(opts)
+
+	if err != nil {
+		return nil, err
+	}
+
 	err = db.engine.Find(&containerImages, &CodetainerImage{Enabled: true})
 	if err != nil {
 		return nil, err
@@ -129,6 +138,41 @@ func (db *Database) LookupCodetainerImage(id string) (*CodetainerImage, error) {
 //
 // List all running codetainers
 //
-func (db *Database) ListCodetainers() {
+func (db *Database) ListCodetainers() (*[]Codetainer, error) {
+	var containers []Codetainer = make([]Codetainer, 0)
 
+	client, err := GlobalConfig.GetDockerClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	opts := docker.ListContainersOptions{}
+	dockers, err := client.ListContainers(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.engine.Find(&containers, &Codetainer{})
+	if err != nil {
+		return nil, err
+	}
+
+	// filter codetainer images by stuff in docker.
+	for i, img := range containers {
+		if findContainerInList(img.Id, dockers) != nil {
+			containers[i].Running = true
+		}
+	}
+
+	return &containers, nil
+}
+
+func findContainerInList(id string, containers []docker.APIContainers) *docker.APIContainers {
+	for _, c := range containers {
+		if c.ID == id {
+			return &c
+		}
+	}
+	return nil
 }

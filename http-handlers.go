@@ -53,6 +53,14 @@ func RouteApiV1CodetainerImage(ctx *Context) error {
 	return errors.New(ctx.R.URL.String() + ": Unsupported method " + ctx.R.Method)
 }
 
+func RouteApiV1Codetainer(ctx *Context) error {
+	if ctx.R.Method == "POST" {
+		return RouteApiV1CodetainerCreate(ctx)
+	} else {
+		return RouteApiV1CodetainerList(ctx)
+	}
+}
+
 // ImageList swagger:route GET /image codetainer imageList
 //
 // List all codetainer images.
@@ -194,8 +202,13 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 
 }
 
+// CodetainerStop swagger:route POST /codetainer/{id}/stop codetainer codetainerStop
 //
 // Stop a codetainer
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerBody
 //
 func RouteApiV1CodetainerStop(ctx *Context) error {
 
@@ -206,18 +219,14 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 
-	client, err := GlobalConfig.GetDockerClient()
-	if err != nil {
-		return jsonError(err, ctx.W)
-	}
-
-	err = client.StopContainer(id, 30)
+	codetainer := Codetainer{Id: id}
+	err := codetainer.Stop()
 
 	if err != nil {
 		return jsonError(err, ctx.W)
 	}
 
-	return nil
+	return renderJson(CodetainerBody{Codetainer: codetainer}, ctx.W)
 }
 
 type FileDesc struct {
@@ -346,11 +355,10 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 		return jsonError(errors.New("POST only"), ctx.W)
 	}
 
-	codetainer := Codetainer{}
-	ctx.R.ParseForm()
-	if err := parseObjectFromForm(&codetainer, ctx.R.PostForm); err != nil {
-		return jsonError(err, ctx.W)
-	}
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+
+	codetainer := Codetainer{Id: id}
 	Log.Infof("Starting codetainer: %s", codetainer.Id)
 	err := codetainer.Start()
 
@@ -364,31 +372,31 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	}, ctx.W)
 }
 
-func RouteApiV1Codetainer(ctx *Context) error {
-	if ctx.R.Method == "POST" {
-		return RouteApiV1CodetainerCreate(ctx)
-	} else {
-		return RouteApiV1CodetainerList(ctx)
-	}
-}
-
 //
-// List all running codetainers
+// CodetainerList swagger:route GET /codetainer codetainer codetainerList
+//
+// List all codetainers
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerListBody
 //
 func RouteApiV1CodetainerList(ctx *Context) error {
-	client, err := GlobalConfig.GetDockerClient()
-	if err != nil {
-		return jsonError(err, ctx.W)
 
-	}
-	containers, err := client.ListContainers(docker.ListContainersOptions{})
+	db, err := GlobalConfig.GetDatabase()
 
 	if err != nil {
 		return jsonError(err, ctx.W)
-
 	}
-	return renderJson(map[string]interface{}{
-		"containers": containers,
+
+	containers, err := db.ListCodetainers()
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	return renderJson(CodetainerListBody{
+		Codetainers: *containers,
 	}, ctx.W)
 }
 

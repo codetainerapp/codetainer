@@ -44,6 +44,8 @@ var (
 	codetainerCreateImageId = codetainerCreate.Arg("image-id", "Docker image id").Required().String()
 	codetainerCreateName    = codetainerCreate.Arg("name", "Name of container").String()
 
+	codetainerList = app.Command("list", "List all codetainers")
+
 	// Log Global logger
 	Log *mlog.Logger
 
@@ -109,6 +111,9 @@ func Start() {
 
 	case codetainerCreate.FullCommand():
 		CreateCodetainer(*codetainerCreateImageId, *codetainerCreateName)
+
+	case codetainerList.FullCommand():
+		CodetainerList()
 
 	default:
 		app.Usage([]string{})

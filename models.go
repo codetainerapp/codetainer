@@ -69,9 +69,19 @@ type Codetainer struct {
 	Id        string    `schema:"id" json:"id"`
 	Name      string    `schema:"name" json:"name"`
 	ImageId   string    `schema:"image-id" json:"image-id"`
-	Defunct   bool      `schema"-"`
+	Defunct   bool      `schema"-"`          // false if active
+	Running   bool      `schema"-" xorm:"-"` // true if running
 	CreatedAt time.Time `schema:"-"`
 	UpdatedAt time.Time `schema:"-"`
+}
+
+func (codetainer *Codetainer) Stop() error {
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		return err
+	}
+
+	return client.StopContainer(codetainer.Id, 30)
 }
 
 func (codetainer *Codetainer) Start() error {
@@ -92,7 +102,6 @@ func (codetainer *Codetainer) Lookup(db *Database) error {
 	has, err := db.engine.Get(&codetainer)
 	if err != nil {
 		return err
-
 	}
 	if !has {
 		return errors.New("No codetainer found:" + codetainer.Id)
@@ -234,4 +243,12 @@ type CodetainerImageListBody struct {
 // swagger:response CodetainerBody
 type CodetainerBody struct {
 	Codetainer `json:"codetainer"`
+}
+
+//
+// CodetainerList response
+//
+// swagger:response CodetainerListBody
+type CodetainerListBody struct {
+	Codetainers []Codetainer `json:"codetainers"`
 }
