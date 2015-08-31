@@ -391,7 +391,6 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	err = codetainer.Start()
 
 	if err != nil {
-		Log.Error(err)
 		return jsonError(err, ctx.W)
 	}
 
