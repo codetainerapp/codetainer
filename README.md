@@ -37,6 +37,9 @@ TODO
 
 ## Running an example codetainer
 
-TODO
+```
+./bin/codetainer image register ubuntu:14.04
+./bin/codetainer create ubuntu:14.04 my-codetainer-name
+```
 
 

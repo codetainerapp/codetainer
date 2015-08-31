@@ -98,6 +98,17 @@ func (codetainer *Codetainer) Start() error {
 	})
 }
 
+func (codetainer *Codetainer) LookupByNameOrId(id string, db *Database) error {
+	codetainer.Id = id
+	if codetainer.Lookup(db) != nil {
+		codetainer.Name = id
+		codetainer.Id = ""
+		err := codetainer.Lookup(db)
+		return err
+	}
+	return nil
+}
+
 func (codetainer *Codetainer) Lookup(db *Database) error {
 	has, err := db.engine.Get(&codetainer)
 	if err != nil {
@@ -168,11 +179,11 @@ func (c *Codetainer) Save(db *Database) error {
 }
 
 type ShortFileInfo struct {
-	Name    string
-	Size    int64
-	IsDir   bool
-	IsLink  bool
-	ModTime time.Time
+	Name    string    `json:"name"`
+	Size    int64     `json:"size"`
+	IsDir   bool      `json:"is_dir"`
+	IsLink  bool      `json:"is_link"`
+	ModTime time.Time `json:"modified_time"`
 }
 
 func NewShortFileInfo(f os.FileInfo) *ShortFileInfo {

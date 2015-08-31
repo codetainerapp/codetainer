@@ -219,8 +219,18 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 
-	codetainer := Codetainer{Id: id}
-	err := codetainer.Stop()
+	db, err := GlobalConfig.GetDatabase()
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	codetainer := Codetainer{}
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	err = codetainer.Stop()
 
 	if err != nil {
 		return jsonError(err, ctx.W)
@@ -239,8 +249,13 @@ func parseFiles(output string) []FileDesc {
 	return files
 }
 
+// ListFiles swagger:route GET /codetainer/{id}/files codetainer listFiles
 //
-// List files in a codetainer
+// List Files in a codetainer
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: Object
 //
 func RouteApiV1CodetainerListFiles(ctx *Context) error {
 
@@ -287,6 +302,11 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 		return jsonError(err, ctx.W)
 	}
 
+	errString := errorWriter.String()
+	if errString != "" {
+		return jsonError(errors.New(errString), ctx.W)
+	}
+
 	files, err := makeShortFiles(outputWriter.Bytes())
 
 	if err != nil {
@@ -295,7 +315,6 @@ func RouteApiV1CodetainerListFiles(ctx *Context) error {
 
 	return renderJson(map[string]interface{}{
 		"files": files,
-		"error": errorWriter.String(),
 	}, ctx.W)
 
 }
@@ -331,7 +350,6 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	err = codetainer.Create(db)
 
 	if err != nil {
-		Log.Error(err)
 		return jsonError(err, ctx.W)
 	}
 
@@ -359,8 +377,19 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	id := vars["id"]
 
 	codetainer := Codetainer{Id: id}
+
+	db, err := GlobalConfig.GetDatabase()
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		return jsonError(err, ctx.W)
+	}
+
 	Log.Infof("Starting codetainer: %s", codetainer.Id)
-	err := codetainer.Start()
+	err = codetainer.Start()
 
 	if err != nil {
 		Log.Error(err)
