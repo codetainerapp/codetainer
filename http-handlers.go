@@ -475,9 +475,19 @@ func RouteApiV1CodetainerAttach(ctx *Context) error {
 		return jsonError(errors.New("No websocket connection for web client: "+ctx.R.URL.String()), ctx.W)
 	}
 
-	connection := &ContainerConnection{id: id, web: ctx.WS}
+	codetainer := Codetainer{}
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
 
-	err := connection.Start()
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	connection := &ContainerConnection{id: codetainer.Id, web: ctx.WS}
+
+	err = connection.Start()
 
 	if err != nil {
 		return jsonError(err, ctx.W)

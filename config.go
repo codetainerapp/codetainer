@@ -20,6 +20,11 @@ type Config struct {
 	database             *Database
 }
 
+func (c *Config) Url() string {
+	// TODO: make this configurable
+	return "http://localhost:3000"
+}
+
 func (c *Config) GetDatabase() (*Database, error) {
 	// TODO cache db
 

@@ -104,6 +104,9 @@ func (codetainer *Codetainer) LookupByNameOrId(id string, db *Database) error {
 		codetainer.Name = id
 		codetainer.Id = ""
 		err := codetainer.Lookup(db)
+		if err != nil {
+			return errors.New("No codetainer found: " + id)
+		}
 		return err
 	}
 	return nil
@@ -115,7 +118,7 @@ func (codetainer *Codetainer) Lookup(db *Database) error {
 		return err
 	}
 	if !has {
-		return errors.New("No codetainer found:" + codetainer.Id)
+		return errors.New("No codetainer found: " + codetainer.Id)
 	}
 	return nil
 }
