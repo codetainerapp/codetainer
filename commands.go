@@ -58,4 +58,5 @@ func CreateCodetainer(imageId string, name string) {
 		Log.Fatal("Unable to create codetainer: ", err)
 	}
 	Log.Info("Create codetainer succeeded:", c)
+	Log.Infof("You can interact with it here: http://localhost:3000/api/v1/codetainer/%s/view\n", c.Id)
 }

@@ -376,14 +376,13 @@ func RouteApiV1CodetainerStart(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 
-	codetainer := Codetainer{Id: id}
-
 	db, err := GlobalConfig.GetDatabase()
 
 	if err != nil {
 		return jsonError(err, ctx.W)
 	}
 
+	codetainer := Codetainer{}
 	if err = codetainer.LookupByNameOrId(id, db); err != nil {
 		return jsonError(err, ctx.W)
 	}
