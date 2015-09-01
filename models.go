@@ -113,7 +113,7 @@ func (codetainer *Codetainer) LookupByNameOrId(id string, db *Database) error {
 }
 
 func (codetainer *Codetainer) Lookup(db *Database) error {
-	has, err := db.engine.Get(&codetainer)
+	has, err := db.engine.Get(codetainer)
 	if err != nil {
 		return err
 	}
