@@ -9,15 +9,16 @@ import (
 	version "github.com/hashicorp/go-version"
 
 	"github.com/BurntSushi/toml"
-	docker "github.com/fsouza/go-dockerclient"
+	docker "github.com/jandre/go-dockerclient"
 )
 
 type Config struct {
-	DockerServerUseHttps bool
-	DockerServer         string
-	DockerPort           int
-	DatabasePath         string
-	database             *Database
+	DockerServerUseHttps    bool
+	DockerServer            string
+	DockerPort              int
+	DatabasePath            string
+	database                *Database
+	currentDockerApiVersion string
 }
 
 func (c *Config) Url() string {
@@ -95,6 +96,9 @@ func (c *Config) testDockerVersion() error {
 	if activeVersion.LessThan(supportedVersion) {
 		return errors.New(currVersion + " version is lower than supported Docker version of " + DockerApiVersion + ". You will need to upgrade docker.")
 	}
+
+	Log.Debug("Found docker API version: ", currVersion)
+	c.currentDockerApiVersion = currVersion
 	return nil
 }
 

@@ -21,12 +21,14 @@ package codetainer
 import (
 	"bytes"
 	"errors"
+	"io"
+	"path"
 	"strconv"
 	"strings"
 
 	"github.com/Unknwon/com"
-	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/mux"
+	docker "github.com/jandre/go-dockerclient"
 )
 
 func RouteIndex(ctx *Context) error {
@@ -42,6 +44,18 @@ func RouteApiV1CodetainerTTY(ctx *Context) error {
 		return RouteApiV1CodetainerGetCurrentTTY(ctx)
 	}
 }
+
+func RouteApiV1CodetainerFile(ctx *Context) error {
+	switch ctx.R.Method {
+	case "PUT":
+		return RouteApiV1CodetainerFileUpload(ctx)
+	case "GET":
+		return RouteApiV1CodetainerFileList(ctx)
+	}
+
+	return errors.New(ctx.R.URL.String() + ": Unsupported method " + ctx.R.Method)
+}
+
 func RouteApiV1CodetainerImage(ctx *Context) error {
 	switch ctx.R.Method {
 	case "POST":
@@ -239,17 +253,7 @@ func RouteApiV1CodetainerStop(ctx *Context) error {
 	return renderJson(CodetainerBody{Codetainer: codetainer}, ctx.W)
 }
 
-type FileDesc struct {
-	name string
-	size int64
-}
-
-func parseFiles(output string) []FileDesc {
-	files := make([]FileDesc, 0)
-	return files
-}
-
-// ListFiles swagger:route GET /codetainer/{id}/files codetainer listFiles
+// ListFiles swagger:route GET /codetainer/{id}/filescodetainer listFiles
 //
 // List Files in a codetainer
 //
@@ -257,7 +261,7 @@ func parseFiles(output string) []FileDesc {
 //    default: APIErrorResponse
 //        200: Object
 //
-func RouteApiV1CodetainerListFiles(ctx *Context) error {
+func RouteApiV1CodetainerFileList(ctx *Context) error {
 
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
@@ -425,6 +429,58 @@ func RouteApiV1CodetainerList(ctx *Context) error {
 	return renderJson(CodetainerListBody{
 		Codetainers: *containers,
 	}, ctx.W)
+}
+
+//
+// CodetainerFileUpload swagger:route PUT /codetainer/{id}/file codetainerFileUpload
+//
+// Upload a file to a codetainer
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerListBody
+//
+func RouteApiV1CodetainerFileUpload(ctx *Context) error {
+
+	db, err := GlobalConfig.GetDatabase()
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+
+	codetainer := Codetainer{}
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	ctx.R.ParseForm()
+	file, hdr, err := ctx.R.FormFile("upload")
+
+	dstPath := ctx.R.FormValue("dst_path")
+	if dstPath == "" {
+		return jsonError(errors.New("Destination folder dst_path is required"),
+			ctx.W)
+	}
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	filename := path.Base(hdr.Filename)
+	dst := new(bytes.Buffer)
+	io.Copy(dst, file)
+
+	Log.Infof("Uploading %s to codetainer: %s", codetainer.Id)
+	err = codetainer.UploadFile(dst.Bytes(), filename, dstPath)
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	return renderJson(map[string]interface{}{"success": true}, ctx.W)
 }
 
 //
