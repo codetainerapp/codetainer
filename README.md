@@ -16,7 +16,7 @@ Codetainer is written in Go.
 
 ## Requirements
 
-  * Docker >=1.7 (older versions may work, untested)
+  * Docker >=1.8 (required for file upload API)
   * Go >=1.4
   * [godep](https://github.com/tools/godep)
 
