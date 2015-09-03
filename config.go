@@ -9,7 +9,7 @@ import (
 	version "github.com/hashicorp/go-version"
 
 	"github.com/BurntSushi/toml"
-	docker "github.com/jandre/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 type Config struct {

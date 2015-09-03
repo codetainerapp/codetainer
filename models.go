@@ -9,8 +9,7 @@ import (
 	"os"
 	"time"
 
-	docker "github.com/jandre/go-dockerclient"
-	//	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/schema"
 )
 

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/websocket"
-	docker "github.com/jandre/go-dockerclient"
 )
 
 var DockerApiVersion string = "1.17"

@@ -27,8 +27,8 @@ import (
 	"strings"
 
 	"github.com/Unknwon/com"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/mux"
-	docker "github.com/jandre/go-dockerclient"
 )
 
 func RouteIndex(ctx *Context) error {
