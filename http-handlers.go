@@ -463,6 +463,16 @@ func RouteApiV1CodetainerSend(ctx *Context) error {
 	}, ctx.W)
 }
 
+//
+// FileDownload swagger:route GET /codetainer/{id}/file/download codetainer fileDownload
+//
+// Download a file from a codetainer.  Requires path={path of file to download}.
+// Returns the multipart messsage with the file bytes.
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: Object
+//
 func RouteApiV1CodetainerFileDownload(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
