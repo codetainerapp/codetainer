@@ -606,13 +606,21 @@ func RouteApiV1CodetainerView(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 
+	tOnly := ctx.R.FormValue("terminal-only")
 	if id == "" {
 		return errors.New("ID of container must be provided")
+	}
+
+	terminalOnly := false
+
+	if tOnly == "1" || tOnly == "true" {
+		terminalOnly = true
 	}
 
 	return executeRaw(ctx, "view.html", 200, map[string]interface{}{
 		"Section":             "ContainerView",
 		"PageIsContainerView": true,
 		"ContainerId":         id,
+		"terminalOnly":        terminalOnly,
 	})
 }

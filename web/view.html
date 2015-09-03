@@ -20,7 +20,7 @@
 
   <div id="codetainer">
     <!-- HEADER --!>
-    <div class="codetainer-header">
+      <div class="codetainer-header" <% if .terminalOnly %>style="display:none"<% end %>>
       <div class="logo">
         <span>code</span><span>tainer</span>
       </div>
@@ -29,11 +29,11 @@
 
 
     <!-- CONTENT --!>
-    <div class="codetainer-content"></div>
+      <div class="codetainer-content <% if .terminalOnly %>full-width<% end %>"></div>
     <!-- END CONTENT --!>
 
     <!-- FOOTER --!>
-    <div class="codetainer-footer">
+      <div class="codetainer-footer" <% if .terminalOnly %>style="display:none"<% end %>>
       <div class="footer-sidebar-options">
         <a class="footer-sidebar-button">
           <i class="fa fa-file"></i>

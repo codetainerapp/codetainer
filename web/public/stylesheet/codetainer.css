@@ -47,6 +47,7 @@ html, body {
 
 }
 
+
 .codetainer-content {
   font-size: 13px;
   top: 35px;
@@ -57,6 +58,12 @@ html, body {
   left: 200px;
   color: #f0f0f0;
   background: #3E4045;
+}
+
+.full-width {
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
 }
 
 #codetainer-terminal{
