@@ -52,6 +52,7 @@ func StartServer() {
 	r.Handle("/api/v1/codetainer/{id}/start", handlerFunc(RouteApiV1CodetainerStart))
 	r.Handle("/api/v1/codetainer/{id}/stop", handlerFunc(RouteApiV1CodetainerStop))
 	r.Handle("/api/v1/image", handlerFunc(RouteApiV1CodetainerImage))
+	r.Handle("/api/v1/codetainer/{id}/file/download", handlerFunc(RouteApiV1CodetainerFileDownload))
 
 	http.Handle("/", r)
 

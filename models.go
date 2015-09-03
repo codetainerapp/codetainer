@@ -1,8 +1,11 @@
 package codetainer
 
 import (
+	"archive/tar"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/url"
 	"os"
 	"time"
@@ -73,6 +76,38 @@ type Codetainer struct {
 	Running   bool      `schema"-" xorm:"-"` // true if running
 	CreatedAt time.Time `schema:"-"`
 	UpdatedAt time.Time `schema:"-"`
+}
+
+func (codetainer *Codetainer) DownloadFile(filePath string) ([]byte, error) {
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	opts := docker.CopyFromContainerOptions{
+		OutputStream: &buf,
+		Container:    codetainer.Id,
+		Resource:     filePath,
+	}
+	err = client.CopyFromContainer(opts)
+	if err != nil {
+		return nil, err
+	}
+	br := bytes.NewReader(buf.Bytes())
+	tr := tar.NewReader(br)
+	var resultBuf bytes.Buffer
+	hdr, err := tr.Next()
+	if err != nil {
+		return nil, err
+	}
+	if hdr.FileInfo().IsDir() {
+		// it's tarred
+		return nil, errors.New("File is a directory:" + filePath)
+	}
+
+	io.Copy(&resultBuf, tr)
+	return resultBuf.Bytes(), nil
 }
 
 func (codetainer *Codetainer) Stop() error {

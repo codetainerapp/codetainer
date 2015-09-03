@@ -21,8 +21,11 @@ package codetainer
 import (
 	"bytes"
 	"errors"
+	"net/http"
+	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Unknwon/com"
 	docker "github.com/fsouza/go-dockerclient"
@@ -458,6 +461,39 @@ func RouteApiV1CodetainerSend(ctx *Context) error {
 	return renderJson(map[string]interface{}{
 		"success": true,
 	}, ctx.W)
+}
+
+func RouteApiV1CodetainerFileDownload(ctx *Context) error {
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+
+	if id == "" {
+		return jsonError(errors.New("ID of container must be provided"), ctx.W)
+	}
+
+	filePath := ctx.R.FormValue("path")
+	if filePath == "" {
+		return jsonError(errors.New("path of file to download is required"), ctx.W)
+	}
+
+	codetainer := Codetainer{}
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		return jsonError(err, ctx.W)
+	}
+	fileBytes, err := codetainer.DownloadFile(filePath)
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+	fileName := path.Base(filePath)
+
+	http.ServeContent(ctx.W, ctx.R, fileName, time.Now(),
+		bytes.NewReader(fileBytes))
+	return nil
 }
 
 //
