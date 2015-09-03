@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/schema"
 )
 
@@ -64,6 +64,33 @@ func (img *CodetainerImage) Register(db *Database) error {
 	return nil
 }
 
+func createTarFile(fileData []byte, fileName string) (*bytes.Buffer, error) {
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+
+	var file = struct {
+		Name string
+		Body []byte
+	}{Name: fileName, Body: fileData}
+
+	hdr := &tar.Header{
+		Name: file.Name,
+		Mode: 0600,
+		Size: int64(len(file.Body)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return nil, err
+	}
+	if _, err := tw.Write(file.Body); err != nil {
+		return nil, err
+	}
+
+	if err := tw.Close(); err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
 //
 // Codetainer data structure.
 //
@@ -108,6 +135,32 @@ func (codetainer *Codetainer) DownloadFile(filePath string) ([]byte, error) {
 
 	io.Copy(&resultBuf, tr)
 	return resultBuf.Bytes(), nil
+
+}
+
+//
+// Upload a file to a `dstPath` in a container.
+//
+func (codetainer *Codetainer) UploadFile(
+	fileData []byte,
+	fileName string,
+	dstFolder string) error {
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		return err
+	}
+
+	buf, err := createTarFile(fileData, fileName)
+	if err != nil {
+		return err
+	}
+
+	fi := bytes.NewReader(buf.Bytes())
+
+	opts := docker.PutContainerArchiveOptions{Path: dstFolder}
+	opts.InputStream = fi
+	Log.Debug("Writing file to codetainer")
+	return client.PutContainerArchive(codetainer.Id, opts)
 }
 
 func (codetainer *Codetainer) Stop() error {
@@ -148,6 +201,7 @@ func (codetainer *Codetainer) LookupByNameOrId(id string, db *Database) error {
 }
 
 func (codetainer *Codetainer) Lookup(db *Database) error {
+	Log.Debug("Looking up: ", codetainer)
 	has, err := db.engine.Get(codetainer)
 	if err != nil {
 		return err
