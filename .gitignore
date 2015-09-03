@@ -3,7 +3,6 @@ doc/
 bindata.go
 
 log/
-pkg/
 release/
 .Version
 package/
