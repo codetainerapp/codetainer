@@ -31,9 +31,13 @@ make
 make install  # optional, to install to /opt/codetainer
 ```
 
-## Configuring the web server
+## Configuring Docker
 
-TODO 
+You must configure Docker to listen on a TCP port.
+
+```
+DOCKER_OPTS="-H tcp://0.0.0.0:4500 -H unix:///var/run/docker.sock"
+```
 
 ## Running an example codetainer
 

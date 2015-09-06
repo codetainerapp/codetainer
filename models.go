@@ -25,7 +25,7 @@ func parseObjectFromForm(p interface{}, form url.Values) error {
 // Container image.
 //
 // swagger:parameters imageCreate
-type Codeta
+type CodetainerImage struct {
 	Id                  string    `xorm:"varchar(128) not null unique" json:"id" schema:"id"`
 	DefaultStartCommand string    `json:"command" schema:"command"`
 	Description         string    `json:"description" schema:"description"`
