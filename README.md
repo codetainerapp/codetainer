@@ -45,7 +45,7 @@ DOCKER_OPTS="-H tcp://0.0.0.0:4500 -H unix:///var/run/docker.sock"
 ```
 ./bin/codetainer image register ubuntu:14.04
 ./bin/codetainer create ubuntu:14.04 my-codetainer-name
-./bin/codetainer server
+./bin/codetainer server  # to start the API server
 ```
 
 
