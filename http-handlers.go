@@ -507,7 +507,7 @@ func RouteApiV1CodetainerSend(ctx *Context) error {
 
 	connection := &ContainerConnection{id: id, web: ctx.WS}
 
-	err := connection.SendSingleMessage(cmd + "\n")
+	err := connection.SendSingleMessage(cmd)
 
 	if err != nil {
 		return jsonError(err, ctx.W)
