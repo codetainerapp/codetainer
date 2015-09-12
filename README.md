@@ -28,8 +28,9 @@ go get github.com/codetainerapp/codetainer
 cd $GOPATH/src/github.com/codetainerapp/codetainer
 # make install_deps  # if you need the dependencies like godep
 make
-make install  # optional, to install to /opt/codetainer
 ```
+
+This will create ./bin/codetainer.
 
 ## Configuring Docker
 
@@ -44,6 +45,7 @@ DOCKER_OPTS="-H tcp://0.0.0.0:4500 -H unix:///var/run/docker.sock"
 ```
 ./bin/codetainer image register ubuntu:14.04
 ./bin/codetainer create ubuntu:14.04 my-codetainer-name
+./bin/codetainer server
 ```
 
 
