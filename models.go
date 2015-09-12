@@ -352,3 +352,7 @@ type CodetainerBody struct {
 type CodetainerListBody struct {
 	Codetainers []Codetainer `json:"codetainers"`
 }
+
+type GenericSuccess struct {
+	Success bool `json:"success"`
+}

@@ -485,9 +485,13 @@ func RouteApiV1CodetainerFileUpload(ctx *Context) error {
 	return renderJson(map[string]interface{}{"success": true}, ctx.W)
 }
 
+// SendCommand swagger:route POST /codetainer/{id}/send codetainer sendCommand
 //
 // Send a command to a container
 //
+// Responses:
+//    default: APIErrorResponse
+//        200: GenericSuccess
 func RouteApiV1CodetainerSend(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 
