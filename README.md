@@ -26,7 +26,7 @@ Codetainer is written in Go.
 # set your $GOPATH
 go get github.com/codetainerapp/codetainer
 cd $GOPATH/src/github.com/codetainerapp/codetainer
-make updatedeps
+# make install_deps  # if you need the dependencies like godep
 make
 make install  # optional, to install to /opt/codetainer
 ```

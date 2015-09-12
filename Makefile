@@ -122,6 +122,11 @@ install: clean all
 	mkdir -p /opt/codetainer
 	sudo cp -r ./bin/ /opt/codetainer/bin
 
+install_deps:
+	go get github.com/tools/godep
+	go get github.com/mitchellh/gox 
+	go get -u github.com/jteeuwen/go-bindata/...
+	
 uninstall: clean
 
 tar: 
