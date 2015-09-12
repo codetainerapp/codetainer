@@ -74,7 +74,7 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "134c9ac46b51ace9135c81efe9aa9895d346c1cf"
+			"Rev": "c9ad0ce23f68428421adfc6ced9e6123f54788a5"
 		},
 		{
 			"ImportPath": "github.com/go-xorm/core",

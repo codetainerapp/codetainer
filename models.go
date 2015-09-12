@@ -154,10 +154,10 @@ func (codetainer *Codetainer) UploadFile(
 
 	fi := bytes.NewReader(buf.Bytes())
 
-	opts := docker.PutContainerArchiveOptions{Path: dstFolder}
+	opts := docker.UploadToContainerOptions{Path: dstFolder}
 	opts.InputStream = fi
 	Log.Debug("Writing file to codetainer")
-	return client.PutContainerArchive(codetainer.Id, opts)
+	return client.UploadToContainer(codetainer.Id, opts)
 }
 
 func (codetainer *Codetainer) Stop() error {

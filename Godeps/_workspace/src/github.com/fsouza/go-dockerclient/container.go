@@ -272,13 +272,14 @@ type Container struct {
 
 	NetworkSettings *NetworkSettings `json:"NetworkSettings,omitempty" yaml:"NetworkSettings,omitempty"`
 
-	SysInitPath    string `json:"SysInitPath,omitempty" yaml:"SysInitPath,omitempty"`
-	ResolvConfPath string `json:"ResolvConfPath,omitempty" yaml:"ResolvConfPath,omitempty"`
-	HostnamePath   string `json:"HostnamePath,omitempty" yaml:"HostnamePath,omitempty"`
-	HostsPath      string `json:"HostsPath,omitempty" yaml:"HostsPath,omitempty"`
-	LogPath        string `json:"LogPath,omitempty" yaml:"LogPath,omitempty"`
-	Name           string `json:"Name,omitempty" yaml:"Name,omitempty"`
-	Driver         string `json:"Driver,omitempty" yaml:"Driver,omitempty"`
+	SysInitPath    string  `json:"SysInitPath,omitempty" yaml:"SysInitPath,omitempty"`
+	ResolvConfPath string  `json:"ResolvConfPath,omitempty" yaml:"ResolvConfPath,omitempty"`
+	HostnamePath   string  `json:"HostnamePath,omitempty" yaml:"HostnamePath,omitempty"`
+	HostsPath      string  `json:"HostsPath,omitempty" yaml:"HostsPath,omitempty"`
+	LogPath        string  `json:"LogPath,omitempty" yaml:"LogPath,omitempty"`
+	Name           string  `json:"Name,omitempty" yaml:"Name,omitempty"`
+	Driver         string  `json:"Driver,omitempty" yaml:"Driver,omitempty"`
+	Mounts         []Mount `json:"Mounts,omitempty" yaml:"Mounts,omitempty"`
 
 	Volumes    map[string]string `json:"Volumes,omitempty" yaml:"Volumes,omitempty"`
 	VolumesRW  map[string]bool   `json:"VolumesRW,omitempty" yaml:"VolumesRW,omitempty"`
@@ -839,20 +840,21 @@ func (c *Client) RemoveContainer(opts RemoveContainerOptions) error {
 	return nil
 }
 
-// PutContainerArchiveOptions is the set of options that can be used when
+// UploadToContainerOptions is the set of options that can be used when
 // uploading an archive into a container.
 //
 // See https://goo.gl/Ss97HW for more details.
-type PutContainerArchiveOptions struct {
+type UploadToContainerOptions struct {
 	InputStream          io.Reader `json:"-" qs:"-"`
 	Path                 string    `qs:"path"`
 	NoOverwriteDirNonDir bool      `qs:"noOverwriteDirNonDir"`
 }
 
-// PutContainerArchive uploads a tar archive to be extracted to a path in the
+// UploadToContainer uploads a tar archive to be extracted to a path in the
 // filesystem of the container.
 //
-func (c *Client) PutContainerArchive(id string, opts PutContainerArchiveOptions) error {
+// See https://goo.gl/Ss97HW for more details.
+func (c *Client) UploadToContainer(id string, opts UploadToContainerOptions) error {
 	url := fmt.Sprintf("/containers/%s/archive?", id) + queryString(opts)
 
 	return c.stream("PUT", url, streamOptions{
@@ -860,20 +862,39 @@ func (c *Client) PutContainerArchive(id string, opts PutContainerArchiveOptions)
 	})
 }
 
-// CopyFromContainerOptions is the set of options that can be used when copying
-// files or folders from a container.
+// DownloadFromContainerOptions is the set of options that can be used when
+// downloading resources from a container.
 //
-// See https://goo.gl/4L7b07 for more details.
+// See https://goo.gl/KnZJDX for more details.
+type DownloadFromContainerOptions struct {
+	OutputStream io.Writer `json:"-" qs:"-"`
+	Path         string    `qs:"path"`
+}
+
+// DownloadFromContainer downloads a tar archive of files or folders in a container.
+//
+// See https://goo.gl/KnZJDX for more details.
+func (c *Client) DownloadFromContainer(id string, opts DownloadFromContainerOptions) error {
+	url := fmt.Sprintf("/containers/%s/archive?", id) + queryString(opts)
+
+	return c.stream("GET", url, streamOptions{
+		setRawTerminal: true,
+		stdout:         opts.OutputStream,
+	})
+}
+
+// CopyFromContainerOptions has been DEPRECATED, please use DownloadFromContainerOptions along with DownloadFromContainer.
+//
+// See https://goo.gl/R2jevW for more details.
 type CopyFromContainerOptions struct {
 	OutputStream io.Writer `json:"-"`
 	Container    string    `json:"-"`
 	Resource     string
 }
 
-// CopyFromContainer copy files or folders from a container, using a given
-// resource.
+// CopyFromContainer has been DEPRECATED, please use DownloadFromContainerOptions along with DownloadFromContainer.
 //
-// See https://goo.gl/4L7b07 for more details.
+// See https://goo.gl/R2jevW for more details.
 func (c *Client) CopyFromContainer(opts CopyFromContainerOptions) error {
 	if opts.Container == "" {
 		return &NoSuchContainer{ID: opts.Container}
