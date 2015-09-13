@@ -35,6 +35,10 @@ var (
 
 	server = app.Command("server", "Start the Codetainer control server.")
 
+	profileCommand         = app.Command("profile", "Profile commands")
+	profileListCommand     = profileCommand.Command("list", "List profiles")
+	profileRegisterCommand = profileCommand.Command("register", "Register profiles")
+
 	imageCommand    = app.Command("image", "Image commands")
 	register        = imageCommand.Command("register", "Register an image for use with codetainer")
 	registerImageId = register.Arg("image-id", "Docker image id").Required().String()
@@ -114,6 +118,9 @@ func Start() {
 
 	case codetainerList.FullCommand():
 		CodetainerList()
+
+	case profileListCommand.FullCommand():
+		ListCodetainerProfiles()
 
 	default:
 		app.Usage([]string{})

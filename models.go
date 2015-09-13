@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -19,6 +20,35 @@ func parseObjectFromForm(p interface{}, form url.Values) error {
 	// r.PostForm is a map of our POST form values
 	err := decoder.Decode(p, form)
 	return err
+}
+
+type CodetainerConfig struct {
+	// id
+	Id string `xorm:"not null unique pk UUID" json:"id" schema:"id"`
+	// profile string with the CodetainerSpec format
+	Profile   string    `json:"profile" schema:"profile"`
+	CreatedAt time.Time `schema:"-"`
+	UpdatedAt time.Time `schema:"-"`
+	Enabled   bool
+}
+
+func (c *CodetainerConfig) GetProfileSpec() (*CodetainerProfileSpec, error) {
+	return parseJsonSpec(strings.NewReader(c.Profile))
+}
+
+func (c *CodetainerConfig) Validate() error {
+	_, err := c.GetProfileSpec()
+	return err
+}
+
+func (c *CodetainerConfig) Save(db *Database) error {
+	if c.Id != "" {
+		_, err := db.engine.Update(c)
+		return err
+	} else {
+		_, err := db.engine.Insert(c)
+		return err
+	}
 }
 
 //
@@ -34,13 +64,6 @@ type CodetainerImage struct {
 	UpdatedAt           time.Time `schema:"-"`
 	Enabled             bool
 }
-
-// func (img *CodetainerImage) Parse(form url.Values) error {
-// decoder := schema.NewDecoder()
-// // r.PostForm is a map of our POST form values
-// err := decoder.Decode(img, form)
-// return err
-// }
 
 func (img *CodetainerImage) Register(db *Database) error {
 	// check if image is in docker
@@ -98,6 +121,7 @@ type Codetainer struct {
 	ImageId   string    `schema:"image-id" json:"image-id"`
 	Defunct   bool      `schema"-"`          // false if active
 	Running   bool      `schema"-" xorm:"-"` // true if running
+	Profile   string    `schema:"-"`
 	CreatedAt time.Time `schema:"-"`
 	UpdatedAt time.Time `schema:"-"`
 }

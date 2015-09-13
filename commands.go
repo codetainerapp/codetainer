@@ -2,6 +2,31 @@ package codetainer
 
 import "fmt"
 
+func ListCodetainerProfiles() {
+
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		Log.Fatal(err)
+	}
+	var cl []CodetainerConfig = make([]CodetainerConfig, 0)
+
+	err = db.engine.Find(&cl, &CodetainerConfig{})
+
+	if err != nil {
+		Log.Fatal("Unable to list profiles: ", err)
+	}
+
+	if len(cl) > 0 {
+		fmt.Printf("Found %d profiles:\n", len(cl))
+	} else {
+		fmt.Println("No profiles found.")
+	}
+
+	for id, c := range cl {
+		fmt.Printf("-- [%d] %s\n", id, c.Id)
+	}
+}
+
 func RegisterCodetainerImage(id string, command string) {
 
 	db, err := GlobalConfig.GetDatabase()
