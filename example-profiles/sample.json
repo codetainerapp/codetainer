@@ -1,0 +1,14 @@
+{
+  "Config": {
+    "Hostname": "elementary123", 
+    "NetworkDisabled": true
+  },
+  "HostConfig": {
+    "CapAdd": ["NET_ADMIN"],
+    "Privileged": false,
+    "ReadonlyRootfs": false,
+    "PortBindings": { "22/tcp": [{ "HostPort": "11022" }] },
+    "Memory": 0,
+    "Ulimits": [{ "Name": "nofile", "Soft": 1024, "Hard": 2048 }]
+  }
+}

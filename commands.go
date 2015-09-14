@@ -1,6 +1,41 @@
 package codetainer
 
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
+	"log"
+)
+
+func RegisterCodetainerProfile(pathToProfile string, name string) {
+
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		Log.Fatal(err)
+	}
+
+	var c CodetainerConfig
+	prof, err := ioutil.ReadFile(pathToProfile)
+
+	if err != nil {
+		Log.Error("Unable to read file " + pathToProfile)
+		Log.Fatal(err)
+	}
+	c.Profile = string(prof)
+	c.Name = name
+
+	err = c.Validate()
+	if err != nil {
+		Log.Error("Unable to parse " + pathToProfile)
+		Log.Fatal(err)
+	}
+	err = c.Save(db)
+	if err != nil {
+		Log.Fatal(err)
+	}
+	log.Printf("Created profile with id=%s: \n", c.Id)
+	log.Println("--")
+	log.Printf(c.Profile)
+}
 
 func ListCodetainerProfiles() {
 
@@ -22,8 +57,8 @@ func ListCodetainerProfiles() {
 		fmt.Println("No profiles found.")
 	}
 
-	for id, c := range cl {
-		fmt.Printf("-- [%d] %s\n", id, c.Id)
+	for _, c := range cl {
+		fmt.Printf("-- [%s] %s\n", c.Id, c.Name)
 	}
 }
 

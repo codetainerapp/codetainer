@@ -1,0 +1,11 @@
+{
+  "Config": {
+    "NetworkDisabled": true
+  },
+  "HostConfig": {
+    "Privileged": false,
+    "ReadonlyRootfs": true,
+    "Memory": 1000000000,
+    "Ulimits": [{ "Name": "nofile", "Soft": 1024, "Hard": 2048 }]
+  }
+}

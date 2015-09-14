@@ -66,7 +66,7 @@ func NewDatabase(dbPath string) (*Database, error) {
 		return nil, err
 	}
 
-	engine.Sync(new(Codetainer), new(CodetainerImage))
+	engine.Sync(new(Codetainer), new(CodetainerImage), new(CodetainerConfig))
 
 	db.engine = engine
 	runtime.SetFinalizer(db, CloseDb)

@@ -13,6 +13,7 @@ import (
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/schema"
+	"github.com/pborman/uuid"
 )
 
 func parseObjectFromForm(p interface{}, form url.Values) error {
@@ -24,12 +25,39 @@ func parseObjectFromForm(p interface{}, form url.Values) error {
 
 type CodetainerConfig struct {
 	// id
-	Id string `xorm:"not null unique pk UUID" json:"id" schema:"id"`
+	Id   string `xorm:"not null unique pk varchar(128)" json:"id" schema:"id"`
+	Name string `xorm:"not null unique" json:"name" schema:"-"`
 	// profile string with the CodetainerSpec format
 	Profile   string    `json:"profile" schema:"profile"`
 	CreatedAt time.Time `schema:"-"`
 	UpdatedAt time.Time `schema:"-"`
 	Enabled   bool
+}
+
+func (c *CodetainerConfig) LookupByNameOrId(db *Database) error {
+	id := c.Id
+	if c.Lookup(db) != nil {
+		c.Name = id
+		c.Id = ""
+		err := c.Lookup(db)
+		if err != nil {
+			return errors.New("No config found: " + id)
+		}
+		return err
+	}
+	return nil
+}
+
+func (c *CodetainerConfig) Lookup(db *Database) error {
+	Log.Debug("Looking up: ", c)
+	has, err := db.engine.Get(c)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return errors.New("No codetainer config found: " + c.Id)
+	}
+	return nil
 }
 
 func (c *CodetainerConfig) GetProfileSpec() (*CodetainerProfileSpec, error) {
@@ -46,6 +74,7 @@ func (c *CodetainerConfig) Save(db *Database) error {
 		_, err := db.engine.Update(c)
 		return err
 	} else {
+		c.Id = uuid.New()
 		_, err := db.engine.Insert(c)
 		return err
 	}
@@ -124,6 +153,10 @@ type Codetainer struct {
 	Profile   string    `schema:"-"`
 	CreatedAt time.Time `schema:"-"`
 	UpdatedAt time.Time `schema:"-"`
+}
+
+func (c *Codetainer) GetProfileSpec() (*CodetainerProfileSpec, error) {
+	return parseJsonSpec(strings.NewReader(c.Profile))
 }
 
 func (codetainer *Codetainer) DownloadFile(filePath string) ([]byte, error) {
@@ -251,32 +284,52 @@ func (codetainer *Codetainer) Create(db *Database) error {
 	}
 
 	codetainer.ImageId = image.Id
+	defaultConfig := &docker.Config{
+		OpenStdin: true,
+		Tty:       true,
+		Image:     image.Id,
+	}
+	defaultHostConfig := &docker.HostConfig{
+		Binds: []string{
+			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
+		},
+	}
 
-	// TODO: all the other configs
-	c, err := client.CreateContainer(docker.CreateContainerOptions{
-		Name: codetainer.Name,
-		Config: &docker.Config{
-			OpenStdin: true,
-			Tty:       true,
-			Image:     image.Id,
-		},
-		HostConfig: &docker.HostConfig{
-			Binds: []string{
+	if codetainer.Profile != "" {
+		config, err := codetainer.GetProfileSpec()
+		if err != nil {
+			Log.Error("Invalid profile spec", err)
+			return err
+		}
+		if config.Config != nil {
+			defaultConfig = config.Config
+			defaultConfig.Tty = true
+			defaultConfig.Image = image.Id
+			defaultConfig.OpenStdin = true
+		}
+		if config.HostConfig != nil {
+			defaultHostConfig = config.HostConfig
+			defaultHostConfig.Binds = []string{
 				GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
-			},
-		},
-	})
+			}
+		}
+
+	}
+
+	opts := docker.CreateContainerOptions{
+		Name:       codetainer.Name,
+		Config:     defaultConfig,
+		HostConfig: defaultHostConfig,
+	}
+
+	Log.Debugf("Creating codetainer with opts: %+v\n", opts)
+	c, err := client.CreateContainer(opts)
 
 	if err != nil {
 		return err
 	}
 
-	// TODO fetch config for codetainer
-	err = client.StartContainer(c.ID, &docker.HostConfig{
-		Binds: []string{
-			GlobalConfig.UtilsPath() + ":/codetainer/utils:ro",
-		},
-	})
+	err = client.StartContainer(c.ID, defaultHostConfig)
 
 	if err != nil {
 		return err
@@ -359,6 +412,15 @@ type CodetainerImageBody struct {
 // swagger:response CodetainerImageListBody
 type CodetainerImageListBody struct {
 	Images []CodetainerImage `json:"images"`
+}
+
+//
+// Codetainer Create Params
+//
+// swagger:parameters CodetainerCreate
+type CodetainerCreateParams struct {
+	Codetainer
+	CodetainerConfigId string `schema:"codetainer-config-id" json:"codetainer-config-id"`
 }
 
 //

@@ -33,11 +33,13 @@ var (
 	appSSL     = app.Flag("ssl", "Enable SSL (useful outside nginx/apache).").Short('s').Bool()
 	configPath = app.Flag("config", "Config path (default is config.toml)").Short('c').String()
 
-	server = app.Command("server", "Start the Codetainer control server.")
+	server = app.Command("server", "Start the Codetainer API server.")
 
 	profileCommand         = app.Command("profile", "Profile commands")
 	profileListCommand     = profileCommand.Command("list", "List profiles")
-	profileRegisterCommand = profileCommand.Command("register", "Register profiles")
+	profileRegisterCommand = profileCommand.Command("register", "Register a profile")
+	profileRegisterPath    = profileRegisterCommand.Arg("path", "Path to load of JSON profile").Required().String()
+	profileRegisterName    = profileRegisterCommand.Arg("name", "name of profile").Required().String()
 
 	imageCommand    = app.Command("image", "Image commands")
 	register        = imageCommand.Command("register", "Register an image for use with codetainer")
@@ -121,6 +123,9 @@ func Start() {
 
 	case profileListCommand.FullCommand():
 		ListCodetainerProfiles()
+
+	case profileRegisterCommand.FullCommand():
+		RegisterCodetainerProfile(*profileRegisterPath, *profileRegisterName)
 
 	default:
 		app.Usage([]string{})

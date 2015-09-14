@@ -340,10 +340,12 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	}
 
 	codetainer := Codetainer{}
+	codetainerPost := CodetainerCreateParams{}
 	ctx.R.ParseForm()
-	if err := parseObjectFromForm(&codetainer, ctx.R.PostForm); err != nil {
+	if err := parseObjectFromForm(&codetainerPost, ctx.R.PostForm); err != nil {
 		return jsonError(err, ctx.W)
 	}
+	codetainer = codetainerPost.Codetainer
 	codetainer.Id = ""
 
 	Log.Infof("Creating codetainer from image: %s", codetainer.ImageId)
@@ -351,6 +353,17 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	db, err := GlobalConfig.GetDatabase()
 	if err != nil {
 		return jsonError(err, ctx.W)
+	}
+
+	if codetainerPost.CodetainerConfigId != "" {
+		cfgId := codetainerPost.CodetainerConfigId
+		Log.Debug("Looking up codetainer config profile: ", cfgId)
+		cfg := &CodetainerConfig{Id: cfgId}
+		err := cfg.LookupByNameOrId(db)
+		if err != nil {
+			return jsonError(err, ctx.W)
+		}
+		codetainer.Profile = cfg.Profile
 	}
 
 	err = codetainer.Create(db)
