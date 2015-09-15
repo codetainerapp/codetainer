@@ -74,9 +74,8 @@
 			"Rev": "897b8800a7d1a93518b87c00e5d1c5d7476f3701"
 		},
 		{
-			"ImportPath": "github.com/opencontainers/specs",
-			"Comment": "v0.1.1-4-gdca1dfd",
-			"Rev": "dca1dfdd92405129fba7ba0c91cfade2dae1d615"
+			"ImportPath": "github.com/pborman/uuid",
+			"Rev": "cccd189d45f7ac3368a0d127efb7f4d08ae0b655"
 		},
 		{
 			"ImportPath": "gopkg.in/alecthomas/kingpin.v2",
