@@ -70,11 +70,27 @@ func RouteApiV1CodetainerImage(ctx *Context) error {
 }
 
 func RouteApiV1Codetainer(ctx *Context) error {
-	if ctx.R.Method == "POST" {
+
+	switch ctx.R.Method {
+	case "POST":
 		return RouteApiV1CodetainerCreate(ctx)
-	} else {
+	case "GET":
 		return RouteApiV1CodetainerList(ctx)
+	case "DELETE":
+		return RouteApiV1CodetainerRemove(ctx)
 	}
+
+	return errors.New(ctx.R.URL.String() + ": Unsupported method " + ctx.R.Method)
+}
+
+func RouteApiV1CodetainerId(ctx *Context) error {
+
+	switch ctx.R.Method {
+	case "DELETE":
+		return RouteApiV1CodetainerRemove(ctx)
+	}
+
+	return errors.New(ctx.R.URL.String() + ": Unsupported method " + ctx.R.Method)
 }
 
 // ImageList swagger:route GET /image codetainer imageList
@@ -216,6 +232,43 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 		"tty": tty,
 	}, ctx.W)
 
+}
+
+// CodetainerRemove swagger:route DELETE /codetainer/{id} codetainer codetainerRemove
+//
+// Remove a codetainer
+//
+// Responses:
+//    default: APIErrorResponse
+//        200: CodetainerBody
+//
+func RouteApiV1CodetainerRemove(ctx *Context) error {
+
+	if ctx.R.Method != "DELETE" {
+		return jsonError(errors.New("DELETE only"), ctx.W)
+	}
+
+	vars := mux.Vars(ctx.R)
+	id := vars["id"]
+
+	db, err := GlobalConfig.GetDatabase()
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	codetainer := Codetainer{}
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	err = codetainer.Remove(db)
+
+	if err != nil {
+		return jsonError(err, ctx.W)
+	}
+
+	return renderJson(CodetainerBody{Codetainer: codetainer}, ctx.W)
 }
 
 // CodetainerStop swagger:route POST /codetainer/{id}/stop codetainer codetainerStop

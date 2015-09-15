@@ -5,7 +5,7 @@ import (
 	"runtime"
 
 	docker "github.com/fsouza/go-dockerclient"
-	core "github.com/go-xorm/core"
+	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -153,7 +153,7 @@ func (db *Database) ListCodetainers() (*[]Codetainer, error) {
 		return nil, err
 	}
 
-	err = db.engine.Find(&containers, &Codetainer{})
+	err = db.engine.Find(&containers, &Codetainer{Defunct: false})
 	if err != nil {
 		return nil, err
 	}

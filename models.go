@@ -217,6 +217,33 @@ func (codetainer *Codetainer) UploadFile(
 	return client.UploadToContainer(codetainer.Id, opts)
 }
 
+func (codetainer *Codetainer) Remove(db *Database) error {
+	Log.Debug("Removing codetainer:", codetainer.Id)
+	client, err := GlobalConfig.GetDockerClient()
+	if err != nil {
+		return err
+	}
+
+	opts := docker.RemoveContainerOptions{
+		ID:    codetainer.Id,
+		Force: true,
+	}
+
+	err = client.RemoveContainer(opts)
+
+	if err != nil {
+		return err
+	}
+
+	codetainer.Defunct = true
+
+	// for some reason engine.Update() isn't working for shit here
+	// needless to say, only ever call this function when Id is populated
+	// by the ORMe
+	_, err = db.engine.Exec("Update codetainer set defunct = 1 where id = ?", codetainer.Id)
+	return err
+}
+
 func (codetainer *Codetainer) Stop() error {
 	client, err := GlobalConfig.GetDockerClient()
 	if err != nil {
