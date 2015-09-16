@@ -58,7 +58,7 @@ func ListCodetainerImages() {
 	}
 
 	for _, c := range cl {
-		fmt.Printf("-- [%s] %v\n", c.Id, c.Tags)
+		fmt.Printf("-- [%s] %+v\n", c.Id, c.Tags)
 	}
 }
 

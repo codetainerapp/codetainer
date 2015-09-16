@@ -99,6 +99,7 @@ func (img *CodetainerImage) Register(db *Database) error {
 	image := lookupImageInDocker(img.Id)
 
 	if image != nil {
+		img.Id = image.ID
 		img.Tags = image.RepoTags
 		img.Enabled = true
 
