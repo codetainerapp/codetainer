@@ -41,10 +41,11 @@ var (
 	profileRegisterPath    = profileRegisterCommand.Arg("path", "Path to load of JSON profile").Required().String()
 	profileRegisterName    = profileRegisterCommand.Arg("name", "name of profile").Required().String()
 
-	imageCommand    = app.Command("image", "Image commands")
-	register        = imageCommand.Command("register", "Register an image for use with codetainer")
-	registerImageId = register.Arg("image-id", "Docker image id").Required().String()
-	registerCommand = register.Arg("command", "Default command to use to start container, e.g. /bin/bash").String()
+	imageCommand      = app.Command("image", "Image commands")
+	register          = imageCommand.Command("register", "Register an image for use with codetainer")
+	registerImageId   = register.Arg("image-id", "Docker image id").Required().String()
+	registerCommand   = register.Arg("command", "Default command to use to start container, e.g. /bin/bash").String()
+	listImagesCommand = imageCommand.Command("list", "List Images")
 
 	codetainerCreate        = app.Command("create", "Launch a new codetainer")
 	codetainerCreateImageId = codetainerCreate.Arg("image-id", "Docker image id").Required().String()
@@ -120,6 +121,9 @@ func Start() {
 
 	case codetainerList.FullCommand():
 		CodetainerList()
+
+	case listImagesCommand.FullCommand():
+		ListCodetainerImages()
 
 	case profileListCommand.FullCommand():
 		ListCodetainerProfiles()

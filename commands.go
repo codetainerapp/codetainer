@@ -37,6 +37,31 @@ func RegisterCodetainerProfile(pathToProfile string, name string) {
 	log.Printf(c.Profile)
 }
 
+func ListCodetainerImages() {
+
+	db, err := GlobalConfig.GetDatabase()
+	if err != nil {
+		Log.Fatal(err)
+	}
+	var cl []CodetainerImage = make([]CodetainerImage, 0)
+
+	err = db.engine.Find(&cl, &CodetainerImage{})
+
+	if err != nil {
+		Log.Fatal("Unable to list images: ", err)
+	}
+
+	if len(cl) > 0 {
+		fmt.Printf("Found %d images:\n", len(cl))
+	} else {
+		fmt.Println("No images found.")
+	}
+
+	for _, c := range cl {
+		fmt.Printf("-- [%s] %v\n", c.Id, c.Tags)
+	}
+}
+
 func ListCodetainerProfiles() {
 
 	db, err := GlobalConfig.GetDatabase()
