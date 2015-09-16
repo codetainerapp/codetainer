@@ -401,6 +401,10 @@ func RouteApiV1CodetainerCreate(ctx *Context) error {
 	codetainer = codetainerPost.Codetainer
 	codetainer.Id = ""
 
+	if codetainer.ImageId == "" {
+		return jsonError(errors.New("image-id is required"), ctx.W)
+	}
+
 	Log.Infof("Creating codetainer from image: %s", codetainer.ImageId)
 
 	db, err := GlobalConfig.GetDatabase()
