@@ -153,7 +153,7 @@ func (db *Database) ListCodetainers() (*[]Codetainer, error) {
 		return nil, err
 	}
 
-	err = db.engine.Find(&containers, &Codetainer{Defunct: false})
+	err = db.engine.Where("defunct = ?", 0).Find(&containers)
 	if err != nil {
 		return nil, err
 	}
