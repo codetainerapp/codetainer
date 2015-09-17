@@ -233,7 +233,7 @@ func (codetainer *Codetainer) Remove(db *Database) error {
 	err = client.RemoveContainer(opts)
 
 	if err != nil {
-		return err
+		Log.Error("Problems removing codetainer via Docker API:", err)
 	}
 
 	codetainer.Defunct = true
