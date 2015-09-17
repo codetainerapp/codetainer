@@ -23,6 +23,8 @@ func CodetainerRemove(id string) {
 	if err != nil {
 		Log.Fatal(err)
 	}
+
+	fmt.Println("[-] Codetainer removed.")
 }
 
 func RegisterCodetainerProfile(pathToProfile string, name string) {

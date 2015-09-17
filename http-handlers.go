@@ -244,12 +244,11 @@ func RouteApiV1CodetainerGetCurrentTTY(ctx *Context) error {
 //
 func RouteApiV1CodetainerGet(ctx *Context) error {
 
-	if ctx.R.Method != "DELETE" {
-		return jsonError(errors.New("DELETE only"), ctx.W)
-	}
-
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
+	if id == "" {
+		return jsonError("id is required", ctx.W)
+	}
 
 	db, err := GlobalConfig.GetDatabase()
 
@@ -281,6 +280,10 @@ func RouteApiV1CodetainerRemove(ctx *Context) error {
 
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
+
+	if id == "" {
+		return jsonError("id is required", ctx.W)
+	}
 
 	db, err := GlobalConfig.GetDatabase()
 
