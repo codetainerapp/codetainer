@@ -41,15 +41,17 @@ var (
 	profileRegisterPath    = profileRegisterCommand.Arg("path", "Path to load of JSON profile").Required().String()
 	profileRegisterName    = profileRegisterCommand.Arg("name", "name of profile").Required().String()
 
-	imageCommand      = app.Command("image", "Image commands")
-	register          = imageCommand.Command("register", "Register an image for use with codetainer")
-	registerImageId   = register.Arg("image-id", "Docker image id").Required().String()
-	registerCommand   = register.Arg("command", "Default command to use to start container, e.g. /bin/bash").String()
-	listImagesCommand = imageCommand.Command("list", "List Images")
+	imageCommand       = app.Command("image", "Image commands")
+	registerCommand    = imageCommand.Command("register", "Register an image for use with codetainer")
+	registerImageId    = registerCommand.Arg("image-id", "Docker image id").Required().String()
+	registerCommandArg = registerCommand.Arg("command", "Default command to use to start container, e.g. /bin/bash").String()
+	listImagesCommand  = imageCommand.Command("list", "List Images")
 
 	codetainerCreate        = app.Command("create", "Launch a new codetainer")
 	codetainerCreateImageId = codetainerCreate.Arg("image-id", "Docker image id").Required().String()
 	codetainerCreateName    = codetainerCreate.Arg("name", "Name of container").String()
+	codetainerRemove        = app.Command("remove", "Remove a codetainer")
+	codetainerRemoveId      = codetainerRemove.Arg("id", "id to remove").Required().String()
 
 	codetainerList = app.Command("list", "List all codetainers")
 
@@ -113,14 +115,17 @@ func Start() {
 	case server.FullCommand():
 		StartServer()
 
-	case register.FullCommand():
-		RegisterCodetainerImage(*registerImageId, *registerCommand)
+	case registerCommand.FullCommand():
+		RegisterCodetainerImage(*registerImageId, *registerCommandArg)
 
 	case codetainerCreate.FullCommand():
 		CreateCodetainer(*codetainerCreateImageId, *codetainerCreateName)
 
 	case codetainerList.FullCommand():
 		CodetainerList()
+
+	case codetainerRemove.FullCommand():
+		CodetainerRemove(*codetainerRemoveId)
 
 	case listImagesCommand.FullCommand():
 		ListCodetainerImages()

@@ -6,6 +6,25 @@ import (
 	"log"
 )
 
+func CodetainerRemove(id string) {
+	db, err := GlobalConfig.GetDatabase()
+
+	if err != nil {
+		Log.Fatal(err)
+	}
+
+	codetainer := Codetainer{}
+	if err = codetainer.LookupByNameOrId(id, db); err != nil {
+		Log.Fatal(err)
+	}
+
+	err = codetainer.Remove(db)
+
+	if err != nil {
+		Log.Fatal(err)
+	}
+}
+
 func RegisterCodetainerProfile(pathToProfile string, name string) {
 
 	db, err := GlobalConfig.GetDatabase()
