@@ -247,7 +247,7 @@ func RouteApiV1CodetainerGet(ctx *Context) error {
 	vars := mux.Vars(ctx.R)
 	id := vars["id"]
 	if id == "" {
-		return jsonError("id is required", ctx.W)
+		return jsonError(errors.New("id is required"), ctx.W)
 	}
 
 	db, err := GlobalConfig.GetDatabase()
@@ -282,7 +282,7 @@ func RouteApiV1CodetainerRemove(ctx *Context) error {
 	id := vars["id"]
 
 	if id == "" {
-		return jsonError("id is required", ctx.W)
+		return jsonError(errors.New("id is required"), ctx.W)
 	}
 
 	db, err := GlobalConfig.GetDatabase()
