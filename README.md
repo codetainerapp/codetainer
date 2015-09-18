@@ -37,7 +37,20 @@ This will create ./bin/codetainer.
 You must configure Docker to listen on a TCP port.
 
 ```
-DOCKER_OPTS="-H tcp://0.0.0.0:4500 -H unix:///var/run/docker.sock"
+DOCKER_OPTS="-H tcp://127.0.0.1:4500 -H unix:///var/run/docker.sock"
+```
+
+## Configuring codetainer
+
+See config.toml.
+
+```toml
+vagrant@vagrant-ubuntu-trusty-64:/opt/dev/codetainer$ more config.toml
+# Docker API server and port
+DockerServer = "localhost"
+DockerPort = 4500
+# Database path
+DatabasePath = "/home/vagrant/codetainer.db"
 ```
 
 ## Running an example codetainer
