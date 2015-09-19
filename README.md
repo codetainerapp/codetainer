@@ -45,7 +45,6 @@ DOCKER_OPTS="-H tcp://127.0.0.1:4500 -H unix:///var/run/docker.sock"
 See config.toml.
 
 ```toml
-vagrant@vagrant-ubuntu-trusty-64:/opt/dev/codetainer$ more config.toml
 # Docker API server and port
 DockerServer = "localhost"
 DockerPort = 4500
