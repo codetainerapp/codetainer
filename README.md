@@ -73,6 +73,43 @@ $ codetainer create ubuntu:14.04 my-codetainer-name
 $ codetainer server  # to start the API server on port 3000
 ```
 
+### Embedding a codetainer in your web app 
+
+ 1. Copy [codetainer.js](web/public/javascript/codetainer.js) to your webapp. 
+ 2. Include `codetainer.js` and `jquery` in your web page. Create a div
+to house the codetainer terminal iframe (it's `#terminal` in the example below).
+
+ ```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>lsof tutorial</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="/javascripts/codetainer.js"></script>
+    <script src="/javascripts/lsof.js"></script>
+  </head>
+  <body>
+     <div id="terminal" data-container="YOUR CODETAINER ID HERE"> 
+  </body>
+</html> 
+ ```
+
+ 3. Run the javascript to load the codetainer iframe from the 
+codetainer API server (supply `data-container` as the id of codetainer on 
+the div, or supply `codetainer` in the constructor options).
+
+```js
+ $('#terminal').codetainer({
+     terminalOnly: true,
+     url: "http://127.0.0.1:3000", // replace with codetainer server URL
+     container: "YOUR CONTAINER ID HERE",
+     width: "100%",
+     height: "100%",
+  });
+```
+
 # Status
 
 Codetainer is unstable and in active development.

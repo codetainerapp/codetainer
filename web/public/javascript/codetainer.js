@@ -14,10 +14,6 @@
       options.container = self.$element.data("container");
     }
 
-    if (self.$element.data("containerHost") !== undefined) {
-      options.containerHost = self.$element.data("host");
-    }
-
     return self;
   };
 
@@ -26,6 +22,10 @@
 
     var url = self.options.url + "/api/v1/codetainer/" +
     self.options.container + "/view";
+
+    if (self.options.terminalOnly) {
+      url += "?terminal-only=1";
+    }
 
     var iframe = "<iframe height='" + self.options.height + "'"+ 
       "width='" + self.options.width + "' title='Codetainer' scrolling='no' " +
@@ -36,18 +36,6 @@
       "</iframe>";
 
     self.$element.html(iframe);
-  };
-
-  Codetainer.prototype.Fullscreen = function() {
-    var self = this;
-  };
-
-  Codetainer.prototype.Resize = function(height, width) {
-    var self = this;
-  };
-
-  Codetainer.prototype.Close = function(height, width) {
-    var self = this;
   };
 
   $.fn.codetainer = function(options) {
