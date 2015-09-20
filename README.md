@@ -79,7 +79,7 @@ $ codetainer server  # to start the API server on port 3000
  2. Include `codetainer.js` and `jquery` in your web page. Create a div
 to house the codetainer terminal iframe (it's `#terminal` in the example below).
 
- ```html
+ ```html 
 <!DOCTYPE html>
 <html>
   <head>
@@ -100,7 +100,7 @@ to house the codetainer terminal iframe (it's `#terminal` in the example below).
 codetainer API server (supply `data-container` as the id of codetainer on 
 the div, or supply `codetainer` in the constructor options).
 
-```js
+```js 
  $('#terminal').codetainer({
      terminalOnly: true,
      url: "http://127.0.0.1:3000", // replace with codetainer server URL
