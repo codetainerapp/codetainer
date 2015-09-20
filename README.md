@@ -67,4 +67,6 @@ $ codetainer create ubuntu:14.04 my-codetainer-name
 $ codetainer server  # to start the API server
 ```
 
+# Status
 
+Codetainer is unstable and in active development.
