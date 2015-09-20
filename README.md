@@ -1,5 +1,7 @@
 # codetainer
 
+![codetainer gif](codetainer.gif?raw=true)
+
 [![Build Status](http://komanda.io:8080/api/badge/github.com/codetainerapp/codetainer/status.svg?branch=master)](http://komanda.io:8080/github.com/codetainerapp/codetainer)
 
 `codetainer` allows you to create code 'sandboxes' you can embed in your 
