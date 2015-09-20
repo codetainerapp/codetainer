@@ -119,8 +119,9 @@ deb386:
 		package/root/=/
 
 install: clean all
-	mkdir -p /opt/codetainer
-	sudo cp -r ./bin/ /opt/codetainer/bin
+	mkdir -p $(GOPATH)/bin/util
+	cp -r ./bin/codetainer $(GOPATH)/bin 
+	cp -r ./bin/util/* $(GOPATH)/bin/util/
 
 install_deps:
 	go get github.com/tools/godep

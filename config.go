@@ -121,7 +121,7 @@ func (c *Config) GetDatabasePath() string {
 
 func (c *Config) UtilsPath() string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return dir + "/util"
+	return path.Join(dir, "util")
 }
 
 func (c *Config) GetDockerClient() (*docker.Client, error) {

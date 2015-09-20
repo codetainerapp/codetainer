@@ -22,10 +22,16 @@ For more information, see [the slides from a talk introduction](https://www.slid
   * Go >=1.4
   * [godep](https://github.com/tools/godep)
 
-## Installing from `go get`
+### Installing from `go get`
 
+```bash
+go get github.com/codetainerapp/codetainer
+cd $GOPATH/src/github.com/codetainerapp/codetainer && make install
+```
 
-## Building & Installing From Source 
+This will install the codetainer utils in $GOPATH/bin.
+
+### Building & Installing From Source 
 
 ```bash
 # set your $GOPATH
@@ -48,7 +54,7 @@ DOCKER_OPTS="-H tcp://127.0.0.1:4500 -H unix:///var/run/docker.sock"
 ## Configuring codetainer
 
 See ~/.codetainer/config.toml.  This file will get auto-generated the first 
-time you run codetainer.
+time you run codetainer, please edit defaults as appropriate.
 
 ```toml
 # Docker API server and port
@@ -64,7 +70,7 @@ DockerPort = 4500
 $ sudo docker pull ubuntu:14.04
 $ codetainer image register ubuntu:14.04
 $ codetainer create ubuntu:14.04 my-codetainer-name
-$ codetainer server  # to start the API server
+$ codetainer server  # to start the API server on port 3000
 ```
 
 # Status
