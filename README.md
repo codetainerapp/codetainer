@@ -102,8 +102,8 @@ the div, or supply `codetainer` in the constructor options).
 
 ```js 
  $('#terminal').codetainer({
-     terminalOnly: true,
-     url: "http://127.0.0.1:3000", // replace with codetainer server URL
+     terminalOnly: false,                 // set to true to show only a terminal window 
+     url: "http://127.0.0.1:3000",        // replace with codetainer server URL
      container: "YOUR CONTAINER ID HERE",
      width: "100%",
      height: "100%",
