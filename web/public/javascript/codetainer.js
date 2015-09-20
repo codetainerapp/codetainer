@@ -55,7 +55,6 @@
     // This is the easiest way to have default options.
     var settings = $.extend({
       url: "https://localhost:3000",
-      containerHost: "localhost:4500",
       width: "700px",
       height: "400px"
     }, options);
