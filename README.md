@@ -12,6 +12,8 @@ of this functionality.
 
 Codetainer is written in Go.
 
+For more information, see [the slides from a talk introduction](https://www.slideshare.net/JenAndre/codetainer-a-browser-code-sandbox).
+
 # Build & Installation
 
 ## Requirements
@@ -19,6 +21,9 @@ Codetainer is written in Go.
   * Docker >=1.8 (required for file upload API)
   * Go >=1.4
   * [godep](https://github.com/tools/godep)
+
+## Installing from `go get`
+
 
 ## Building & Installing From Source 
 
@@ -42,22 +47,24 @@ DOCKER_OPTS="-H tcp://127.0.0.1:4500 -H unix:///var/run/docker.sock"
 
 ## Configuring codetainer
 
-See config.toml.
+See ~/.codetainer/config.toml.  This file will get auto-generated the first 
+time you run codetainer.
 
 ```toml
 # Docker API server and port
 DockerServer = "localhost"
 DockerPort = 4500
-# Database path
-DatabasePath = "/home/vagrant/codetainer.db"
+# Database path (optional, default is ~/codetainer/codetainer.db)
+# DatabasePath = "/path/to/codetainer.db"
 ```
 
 ## Running an example codetainer
 
-```
-./bin/codetainer image register ubuntu:14.04
-./bin/codetainer create ubuntu:14.04 my-codetainer-name
-./bin/codetainer server  # to start the API server
+```bash
+$ sudo docker pull ubuntu:14.04
+$ codetainer image register ubuntu:14.04
+$ codetainer create ubuntu:14.04 my-codetainer-name
+$ codetainer server  # to start the API server
 ```
 
 

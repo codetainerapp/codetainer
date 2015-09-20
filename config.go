@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/user"
+	"path"
 	"path/filepath"
 
 	version "github.com/hashicorp/go-version"
@@ -11,6 +13,69 @@ import (
 	"github.com/BurntSushi/toml"
 	docker "github.com/fsouza/go-dockerclient"
 )
+
+var globalConfigPath string = "/etc/codetainer/config.toml"
+var globalDbPath string = "/var/codetainer/codetainer.db"
+
+var (
+	DefaultConfigFileSettings = `# Docker API server and port 
+DockerServer = "localhost"
+DockerPort = 4500`
+	GlobalConfig Config
+)
+
+//
+// detectConfigPath will return the path to the configuration file.
+// Use either a global path: /etc/codetainer/config.toml
+// Or a local path ~/.codetainer/config.toml
+//
+func detectConfigPath() (string, error) {
+
+	if fileExists(globalConfigPath) {
+		return globalConfigPath, nil
+	}
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	basePath := path.Join(usr.HomeDir, ".codetainer")
+	if _, err := os.Stat(basePath); err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(basePath, 0700)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+	return path.Join(basePath, "config.toml"), nil
+}
+
+// detectDataabsePath will return the path to the database file.
+// Use either a global path: /etc/codetainer/codetainer.db
+// Or a local path ~/.codetainer/codetainer.db
+
+func detectDatabasePath() (string, error) {
+
+	if fileExists(globalDbPath) {
+		return globalDbPath, nil
+	}
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	basePath := path.Join(usr.HomeDir, ".codetainer")
+	if _, err := os.Stat(basePath); err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(basePath, 0700)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	}
+	return path.Join(basePath, "codetainer.db"), nil
+}
 
 type Config struct {
 	DockerServerUseHttps    bool
@@ -44,21 +109,13 @@ func (c *Config) GetDatabase() (*Database, error) {
 func (c *Config) GetDatabasePath() string {
 
 	if c.DatabasePath == "" {
-		// basePath := "/var/lib/codetainer/"
-		// basePath := "./"
-		c.DatabasePath = "codetainer.db"
-
-		// if _, err := os.Stat(c.DatabasePath); err != nil {
-		// if os.IsNotExist(err) {
-		// err := os.MkdirAll("/var/lib/codetainer", 0700)
-		// if err != nil {
-		// Log.Fatal("Unable to create path for database: " + basePath)
-		// }
-		// } else {
-		// Log.Fatal(err)
-		// }
-		// }
+		p, err := detectDatabasePath()
+		c.DatabasePath = p
+		if err != nil {
+			Log.Fatal("Unable to create database at ~/.codetainer/codetainer.db or "+globalDbPath, err)
+		}
 	}
+	Log.Debugf("Using database path: %s", c.DatabasePath)
 	return c.DatabasePath
 }
 
@@ -120,7 +177,7 @@ func (c *Config) TestConfig() bool {
 configured the Docker API to accept remote HTTP connections?
 
 E.g., your docker service needs to have the following parameters in the
-command line:
+command line in order to use web sockets:
 
   /usr/bin/docker -d -H tcp://127.0.0.1:4500
 
@@ -141,40 +198,34 @@ and DockerPort:
 	return true
 }
 
-var (
-	ConfigPath = "config.toml"
-
-	DefaultConfigFileSettings = `# Docker API server and port 
-DockerServer = "localhost"
-DockerPort = 4500`
-	GlobalConfig Config
-)
-
 func NewConfig(configPath string) (*Config, error) {
-	Log.Debugf("Loading %s configurations", Name)
-
+	var err error
 	if configPath == "" {
-		configPath = ConfigPath
+		configPath, err = detectConfigPath()
+		if err != nil {
+			Log.Fatal("Unable to load config from ~/.codetainer/config.toml or /etc/codetainer/config.toml", err)
+		}
 	}
 
+	Log.Debugf("Loading %s configurations from %s", Name, configPath)
 	config := &Config{}
 
 	if !IsExist(configPath) {
 
 		configData := []byte(DefaultConfigFileSettings)
 
-		f, err := os.Create(ConfigPath)
+		f, err := os.Create(configPath)
 
 		if err != nil {
 			Log.Error(err)
-			Log.Fatalf("Unable to create configuration file: %s.", ConfigPath)
+			Log.Fatalf("Unable to create configuration file: %s.", configPath)
 		}
 
 		_, err = f.Write(configData)
 
 		if err != nil {
 			Log.Error(err)
-			Log.Fatalf("Unable to create configuration file: %s.", ConfigPath)
+			Log.Fatalf("Unable to create configuration file: %s.", configPath)
 		}
 
 		f.Sync()
