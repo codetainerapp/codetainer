@@ -112,6 +112,22 @@ the div, or supply `codetainer` in the constructor options).
   });
 ```
 
+### API Documentation
+
+*TODO*
+
+### Profiles
+
+*TODO* more documentation.
+
+You can use profiles to apply Docker configs to limit CPU, memory, network access,
+and more.
+
+See [example profiles]('./example-profiles') for some examples of this.
+
+Register a profile to use with codetainer using `codetainer profile register <path-to-json> <name of profile>`
+and then supply `container-config-id` when POST'ing to `/api/v1/codetainer` to create.
+
 # Status
 
 Codetainer is unstable and in active development.
