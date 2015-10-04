@@ -24,20 +24,13 @@ For more information, see [the slides from a talk introduction](https://www.slid
   * Go >=1.4
   * [godep](https://github.com/tools/godep)
 
-### Installing from `go get`
-
-```bash
-go get github.com/codetainerapp/codetainer
-cd $GOPATH/src/github.com/codetainerapp/codetainer && make install
-```
-
-This will install the codetainer utils in $GOPATH/bin.
-
 ### Building & Installing From Source 
 
 ```bash
 # set your $GOPATH
-go get github.com/codetainerapp/codetainer
+go get github.com/codetainerapp/codetainer  
+# you may get errors about not compiling due to Asset missing, it's ok. bindata.go needs to be created
+# by `go generate` first.
 cd $GOPATH/src/github.com/codetainerapp/codetainer
 # make install_deps  # if you need the dependencies like godep
 make
