@@ -1,3 +1,4 @@
+//go:generate go-bindata -pkg=codetainer web/...
 package codetainer
 
 import (
