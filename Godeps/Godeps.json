@@ -74,6 +74,10 @@
 			"Rev": "897b8800a7d1a93518b87c00e5d1c5d7476f3701"
 		},
 		{
+			"ImportPath": "github.com/mitchellh/go-homedir",
+			"Rev": "df55a15e5ce646808815381b3db47a8c66ea62f4"
+		},
+		{
 			"ImportPath": "github.com/pborman/uuid",
 			"Rev": "cccd189d45f7ac3368a0d127efb7f4d08ae0b655"
 		},

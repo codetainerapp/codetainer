@@ -7,11 +7,12 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
-
-	version "github.com/hashicorp/go-version"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	docker "github.com/fsouza/go-dockerclient"
+	version "github.com/hashicorp/go-version"
+	"github.com/mitchellh/go-homedir"
 )
 
 var globalConfigPath string = "/etc/codetainer/config.toml"
@@ -81,6 +82,7 @@ type Config struct {
 	DockerServerUseHttps    bool
 	DockerServer            string
 	DockerPort              int
+	DockerCertPath          string
 	DatabasePath            string
 	database                *Database
 	currentDockerApiVersion string
@@ -126,7 +128,27 @@ func (c *Config) UtilsPath() string {
 
 func (c *Config) GetDockerClient() (*docker.Client, error) {
 	endpoint := c.GetDockerEndpoint()
-	return docker.NewClient(endpoint)
+
+	if !c.DockerServerUseHttps {
+		return docker.NewClient(endpoint)
+	}
+
+	certPath := c.DockerCertPath
+	// expand if the path starts with "~/"
+	if strings.HasPrefix(certPath, "~/") {
+		home, err := homedir.Dir()
+		if err != nil {
+			return nil, fmt.Errorf("Cannot detect home directory: %v", err)
+		}
+		certPath = filepath.Join(home, certPath[2:])
+	}
+
+	var (
+		cert = filepath.Join(certPath, "cert.pem")
+		key  = filepath.Join(certPath, "key.pem")
+		ca   = filepath.Join(certPath, "ca.pem")
+	)
+	return docker.NewTLSClient(endpoint, cert, key, ca)
 }
 
 func (c *Config) testDockerClient() error {

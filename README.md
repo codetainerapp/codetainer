@@ -55,7 +55,14 @@ time you run codetainer, please edit defaults as appropriate.
 # Docker API server and port
 DockerServer = "localhost"
 DockerPort = 4500
-# Database path (optional, default is ~/codetainer/codetainer.db)
+
+# Enable TLS support (optional, if you access to Docker API over HTTPS)
+# DockerServerUseHttps = true
+# Certificate directory path (optional)
+#   e.g. if you use Docker Machine: "~/.docker/machine/certs"
+# DockerCertPath = "/path/to/certs"
+
+# Database path (optional, default is ~/.codetainer/codetainer.db)
 # DatabasePath = "/path/to/codetainer.db"
 ```
 
