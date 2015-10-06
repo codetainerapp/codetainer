@@ -179,7 +179,7 @@ configured the Docker API to accept remote HTTP connections?
 E.g., your docker service needs to have the following parameters in the
 command line in order to use web sockets:
 
-  /usr/bin/docker -d -H tcp://127.0.0.1:4500
+  /usr/bin/docker daemon -H tcp://127.0.0.1:4500
 
 Please also check your config.toml has the correct configuration for the DockerServer
 and DockerPort:
