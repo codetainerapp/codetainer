@@ -2,6 +2,7 @@ package codetainer
 
 import (
 	"bytes"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -120,13 +121,18 @@ func (c *ContainerConnection) openSocketToContainer() error {
 		return err
 	}
 
-	rawConn, err := net.Dial("tcp", u.Host)
+	var rawConn net.Conn
+	if GlobalConfig.DockerServerUseHttps {
+		rawConn, err = tls.Dial("tcp", u.Host, GlobalConfig.tlsConfig)
+	} else {
+		rawConn, err = net.Dial("tcp", u.Host)
+	}
 	if err != nil {
 		return err
 	}
 
 	wsHeaders := http.Header{
-		"Origin": {"http://localhost:4500"},
+		"Origin": {endpoint},
 	}
 
 	wsConn, resp, err := websocket.NewClient(rawConn, u, wsHeaders, 1024, 1024)
