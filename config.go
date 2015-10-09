@@ -1,8 +1,11 @@
 package codetainer
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -86,6 +89,7 @@ type Config struct {
 	DatabasePath            string
 	database                *Database
 	currentDockerApiVersion string
+	tlsConfig               *tls.Config
 }
 
 func (c *Config) Url() string {
@@ -133,21 +137,7 @@ func (c *Config) GetDockerClient() (*docker.Client, error) {
 		return docker.NewClient(endpoint)
 	}
 
-	certPath := c.DockerCertPath
-	// expand if the path starts with "~/"
-	if strings.HasPrefix(certPath, "~/") {
-		home, err := homedir.Dir()
-		if err != nil {
-			return nil, fmt.Errorf("Cannot detect home directory: %v", err)
-		}
-		certPath = filepath.Join(home, certPath[2:])
-	}
-
-	var (
-		cert = filepath.Join(certPath, "cert.pem")
-		key  = filepath.Join(certPath, "key.pem")
-		ca   = filepath.Join(certPath, "ca.pem")
-	)
+	cert, key, ca := c.certFilePaths()
 	return docker.NewTLSClient(endpoint, cert, key, ca)
 }
 
@@ -220,6 +210,63 @@ and DockerPort:
 	return true
 }
 
+func (c *Config) certFilePaths() (cert, key, ca string) {
+	certPath := c.DockerCertPath
+	// expand if the path starts with "~"
+	if strings.HasPrefix(certPath, "~") {
+		home, err := homedir.Dir()
+		if err != nil {
+			return "", "", ""
+		}
+		certPath = filepath.Join(home, certPath[1:])
+	}
+
+	cert = filepath.Join(certPath, "cert.pem")
+	key = filepath.Join(certPath, "key.pem")
+	ca = filepath.Join(certPath, "ca.pem")
+	return cert, key, ca
+}
+
+func (c *Config) setTLSConfig() error {
+	cert, key, ca := c.certFilePaths()
+
+	certPEMBlock, err := ioutil.ReadFile(cert)
+	if err != nil {
+		return err
+	}
+	keyPEMBlock, err := ioutil.ReadFile(key)
+	if err != nil {
+		return err
+	}
+	caPEMCert, err := ioutil.ReadFile(ca)
+	if err != nil {
+		return err
+	}
+
+	if certPEMBlock == nil || keyPEMBlock == nil {
+		return errors.New("Both cert and key are required")
+	}
+
+	tlsCert, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	if err != nil {
+		return err
+	}
+
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{tlsCert}}
+	if caPEMCert == nil {
+		tlsConfig.InsecureSkipVerify = true
+	} else {
+		caPool := x509.NewCertPool()
+		if !caPool.AppendCertsFromPEM(caPEMCert) {
+			return errors.New("Could not add RootCA pem")
+		}
+		tlsConfig.RootCAs = caPool
+	}
+
+	c.tlsConfig = tlsConfig
+	return nil
+}
+
 func NewConfig(configPath string) (*Config, error) {
 	var err error
 	if configPath == "" {
@@ -257,5 +304,13 @@ func NewConfig(configPath string) (*Config, error) {
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
 		return config, err
 	}
+
+	if config.DockerServerUseHttps {
+		// read certificate files and hold it
+		if err := config.setTLSConfig(); err != nil {
+			return config, err
+		}
+	}
+
 	return config, nil
 }
