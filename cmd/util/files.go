@@ -17,11 +17,11 @@ var (
 )
 
 type ShortFileInfo struct {
-	Name    string
-	Size    int64
-	IsDir   bool
-	IsLink  bool
-	ModTime time.Time
+	Name    string    `json:"name"`
+	Size    int64     `json:"size"`
+	IsDir   bool      `json:"is_dir"`
+	IsLink  bool      `json:"is_link"`
+	ModTime time.Time `json:"modified_time"`
 }
 
 func NewShortFileInfo(f os.FileInfo) *ShortFileInfo {
