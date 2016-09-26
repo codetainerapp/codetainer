@@ -126,7 +126,7 @@ and more.
 See [example profiles](example-profiles) for some examples of this.
 
 Register a profile to use with codetainer using `codetainer profile register <path-to-json> <name of profile>`
-and then supply `container-config-id` when POST'ing to `/api/v1/codetainer` to create.
+and then supply `codetainer-config-id` when POST'ing to `/api/v1/codetainer` to create.
 
 # Status
 
