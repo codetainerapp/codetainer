@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "d1f46ee3921b42bd217fb81a044e5cb1e03c0383"
+			"Rev": "4df4873b288c855e4186534280c3a3a1af403e67"
 		},
 		{
 			"ImportPath": "github.com/go-xorm/core",
