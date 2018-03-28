@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/codetainerapp/codetainer",
+	"ImportPath": "github.com/recruit2class/codetainer",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v80",
 	"Deps": [

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codetainerapp/codetainer/mlog"
+	"github.com/recruit2class/codetainer/mlog"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 

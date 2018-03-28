@@ -2,7 +2,7 @@
 
 ![codetainer gif](codetainer.gif?raw=true)
 
-[![Build Status](http://komanda.io:8080/api/badge/github.com/codetainerapp/codetainer/status.svg?branch=master)](http://komanda.io:8080/github.com/codetainerapp/codetainer)
+[![Build Status](http://komanda.io:8080/api/badge/github.com/recruit2class/codetainer/status.svg?branch=master)](http://komanda.io:8080/github.com/recruit2class/codetainer)
 
 `codetainer` allows you to create code 'sandboxes' you can embed in your 
 web applications (think of it like an OSS clone of [codepicnic.com](http://codepicnic.com)).
@@ -28,10 +28,10 @@ For more information, see [the slides from a talk introduction](https://www.slid
 
 ```bash
 # set your $GOPATH
-go get github.com/codetainerapp/codetainer  
+go get github.com/recruit2class/codetainer
 # you may get errors about not compiling due to Asset missing, it's ok. bindata.go needs to be created
 # by `go generate` first.
-cd $GOPATH/src/github.com/codetainerapp/codetainer
+cd $GOPATH/src/github.com/recruit2class/codetainer
 # make install_deps  # if you need the dependencies like godep
 make
 ```
