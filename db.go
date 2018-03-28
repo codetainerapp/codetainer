@@ -60,7 +60,7 @@ func NewDatabase(dbPath string) (*Database, error) {
 
 	engine, err := xorm.NewEngine("sqlite3", dbPath)
 
-	engine.Logger.SetLevel(core.LOG_WARNING)
+	engine.SetLogLevel(core.LOG_WARNING)
 
 	if err != nil {
 		return nil, err
