@@ -1,6 +1,7 @@
 bin/
 doc/
 bindata.go
+.idea
 
 log/
 release/
