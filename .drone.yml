@@ -3,7 +3,7 @@ branches:
   - master
   - develop
 git:
-  path: github.com/codetainerapp/codetainer
+  path: github.com/recruit2class/codetainer
 script:
   - make
   - make test

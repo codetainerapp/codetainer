@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/websocket"
 )
@@ -121,11 +120,14 @@ func (c *ContainerConnection) openSocketToContainer() error {
 		return err
 	}
 
+	// Convert Scheme to ws to satisfy change in gorilla.websocket.client.websocket.NewClient()
 	var rawConn net.Conn
 	if GlobalConfig.DockerServerUseHttps {
 		rawConn, err = tls.Dial("tcp", u.Host, GlobalConfig.tlsConfig)
+		u.Scheme = "wss"
 	} else {
 		rawConn, err = net.Dial("tcp", u.Host)
+		u.Scheme = "ws"
 	}
 	if err != nil {
 		return err
@@ -138,7 +140,7 @@ func (c *ContainerConnection) openSocketToContainer() error {
 	wsConn, resp, err := websocket.NewClient(rawConn, u, wsHeaders, 1024, 1024)
 
 	if err != nil {
-		Log.Error("Unable to connect", resp, err)
+		Log.Error("Unable to connect ", resp, err)
 	}
 	c.container = wsConn
 	return err

@@ -3,7 +3,7 @@ package main
 import (
 	"runtime"
 
-	codetainer "github.com/codetainerapp/codetainer"
+	codetainer "github.com/recruit2class/codetainer"
 )
 
 var (

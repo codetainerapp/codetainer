@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codetainerapp/codetainer/mlog"
+	"github.com/recruit2class/codetainer/mlog"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -17,7 +17,7 @@ const (
 	Description = ""
 
 	// Version application version number
-	Version = "0.1.0"
+	Version = "0.1.1"
 )
 
 var (
